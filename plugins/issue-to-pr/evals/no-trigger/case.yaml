@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.1",
+  "name": "no-trigger",
+  "execution": {
+    "prompt": "Explain what this function returns for a numeric argument:\n\nfunction increment(value) {\n  return value + 1;\n}",
+    "max_turns": 10,
+    "timeout_seconds": 120,
+    "allowed_tools": ["Read", "Glob", "Grep", "Skill"]
+  },
+  "graders": [
+    {
+      "name": "explains-increment",
+      "type": "llm",
+      "focus": "last_message",
+      "criteria": "PASS if the response correctly explains that the function returns its numeric argument plus one, without starting an issue-to-PR workflow or requesting repository access. Accept equivalent wording such as increased by one, one greater, or value + 1. FAIL if it gives an incorrect return value, says the function returns undefined, denies that the computed value is returned, or only quotes the function without explaining the result."
+    },
+    {
+      "name": "skill-not-fired",
+      "type": "tool_used",
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:issue-to-pr:)?run\"",
+      "min": 0,
+      "max": 0,
+      "arm": "both"
+    }
+  ]
+}

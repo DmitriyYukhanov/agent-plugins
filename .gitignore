@@ -12,3 +12,6 @@ tmp/task-*/
 # Python bytecode — the humanizer plugin vendors a scanner that generates it on run
 __pycache__/
 *.pyc
+
+# Local behavioral eval reports and transcripts
+plugins/issue-to-pr/evals/results/

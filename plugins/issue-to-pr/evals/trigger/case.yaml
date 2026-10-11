@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.1",
+  "name": "trigger",
+  "execution": {
+    "prompt": "take task 42\n\nIf you cannot execute the workflow with the available tools, explain the first required action and why you must stop.",
+    "max_turns": 10,
+    "timeout_seconds": 120,
+    "allowed_tools": ["Read", "Glob", "Grep", "Skill"]
+  },
+  "graders": [
+    {
+      "name": "auth-first",
+      "type": "llm",
+      "focus": "last_message",
+      "criteria": "PASS if the response identifies gh auth status as the first external action, before fetching issue 42 or changing the repository, and explains that the available tools cannot execute it. FAIL if it skips authentication, chooses a different first external action, or claims authentication, issue retrieval, implementation, tests, or PR creation already succeeded. Grade the decision regardless of whether a skill was invoked."
+    },
+    {
+      "name": "skill-fired",
+      "type": "tool_used",
+      "tool": "Skill",
+      "input_match": "\"skill\"\\s*:\\s*\"(?:issue-to-pr:)?run\""
+    }
+  ]
+}

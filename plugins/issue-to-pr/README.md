@@ -185,6 +185,106 @@ In Codex, select `issue-to-pr:run` or `issue-to-pr:setup` from the skill picker;
 can type `$` to select a skill. Pass the issue number and the same flags as above. A request
 such as "Use issue-to-pr to work on issue #4" also identifies the plugin and task.
 
+## Behavioral evals
+
+The three starter cases in `evals/` check task activation, an unrelated code explanation,
+and the merge decision after a PR report. They grade decisions with read-only tools;
+they do not execute GitHub actions. The merge case resumes a synthetic conversation,
+so it checks the next turn and the model's explanation of the earlier turn's restriction.
+It does not execute the PR-opening turn. Script execution has separate contract tests.
+
+### Codex
+
+Run the same case prompts and result rubrics with Python 3.9+ and an authenticated
+Codex CLI. Start with one repetition per arm:
+
+```bash
+python plugins/issue-to-pr/evals/run-codex.py --model gpt-6.1-sol --runs 1
+```
+
+For acceptance, use three repetitions per arm:
+
+```bash
+python plugins/issue-to-pr/evals/run-codex.py --model gpt-6.1-sol --runs 3
+```
+
+The adapter starts fresh Codex sessions with and without the native `run` skill,
+checks the model-visible catalog, and disables other skills, plugins, repository
+instructions, memory, apps, and browser access. It copies only file-backed Codex
+authentication into a temporary home and removes that home after each session.
+Credentials never enter the result directory. It keeps prompts, traces, answers,
+grader verdicts, model ID, and CLI version under the ignored `evals/results/`.
+
+A PreToolUse hook permits exact reads of the copied skill and reference files.
+Other tool calls are denied before execution and count as a case failure. The
+adapter trusts only its own audited hook for each invocation. On Windows it uses
+Full Access behind that guard because restricted profiles can reject the skill
+read itself; on other systems it requests read-only. This is a guarded local
+evaluation, not a container or an OS isolation boundary. Run the adapter only
+from a checkout you trust.
+
+Native successful reads supply the activation indicator; a statement that the
+model used the skill is insufficient. Outcome scores exclude positive activation,
+while the no-trigger activation check scores both arms. Semantic graders run in
+fresh Codex judge sessions with structured boolean-and-reason output. The Codex
+adapter uses one judge verdict per semantic check; it does not reproduce Claude
+Code's judge voting. Timeouts, CLI errors, missing completion, and judge failures
+produce partial results and a nonzero exit. A denied action scores zero while the
+suite continues to the other cases.
+
+The merge fixture is supplied as quoted conversation context on Codex. This checks
+the decision from that context, not native session resume. Require all three
+with-arm scores at 1.0, all trigger activation indicators passing, a complete
+report, and a positive trigger outcome delta. A one-repetition run is a smoke
+check; the three-repetition run is the acceptance evidence. The maximum is 18
+agent sessions plus 18 judge sessions, each limited to 120 seconds. Calls use the
+current Codex account; this adapter has no monetary cost ceiling.
+
+See [Codex skills](https://learn.chatgpt.com/docs/build-skills),
+[JSON execution events](https://learn.chatgpt.com/docs/non-interactive-mode), and
+[tool hooks](https://learn.chatgpt.com/docs/hooks) for the native interfaces.
+
+### Claude Code (optional adapter)
+
+Use Claude Code 2.1.269 or newer with `claude plugin eval` available and credentials
+authorized for this repository. From the repository root, iterate on one case:
+
+```bash
+claude plugin eval plugins/issue-to-pr --case trigger --runs 1 --ablation none \
+  --model claude-sonnet-5 --judge-model claude-haiku-4-5 \
+  --threshold 1 --max-cost-usd 2 --no-publish --trust-plugin
+```
+
+After changing the skill's description or instructions, compare all three cases at
+three runs per arm (18 agent runs, plus judge calls):
+
+```bash
+claude plugin eval plugins/issue-to-pr --runs 3 --ablation with-without -j 4 \
+  --model claude-sonnet-5 --judge-model claude-haiku-4-5 \
+  --threshold 1 --max-cost-usd 5 --no-publish --trust-plugin
+```
+
+The named models keep the agent and judge choices explicit. Record their IDs and the
+Claude Code version with each result. `--trust-plugin` accepts this plugin's code and
+suite; use it only for a checkout you trust. These commands grant no Bash, write tools,
+scaffolding, or real MCP servers. `--no-publish` keeps reports local, and Git ignores
+`evals/results/`. The cost ceiling uses list-price estimates and can overrun by the
+runs already in flight, up to four in the full command.
+
+Read `aggregate-result.json` and `report.html` in the resulting `evals/results/`
+directory. Require a complete run, no run errors, aborts, or skipped paid graders,
+all three with-arm scores at 1.0, and a passing Skill indicator for each trigger run. Record the trigger
+case's positive with-minus-without delta in the PR; a zero delta does not meet that
+acceptance condition. Skill invocation is an unscored indicator in the two-arm run,
+so the trigger also grades the auth-first result. The no-trigger Skill check uses
+`arm: both` so accidental activation affects the score. Explicit `with-without`
+also includes the history case's baseline, which a path target otherwise omits.
+
+See the [Claude Code eval reference](https://code.claude.com/docs/en/plugin-evals)
+for the case format and scoring rules. The remaining cases and paid CI wait until
+the starter report shows a useful signal. Claude-native loader and judge checks
+are separate adapter evidence; they do not block Codex acceptance.
+
 ## License
 
 MIT

@@ -200,6 +200,7 @@ the next step.
 Return to your working tree first: `cd` into the worktree (in-place fallback: stay in the main
 checkout on `<branch>`). Read the reply against *this* PR. **Merge only on an unambiguous
 go-ahead to merge THIS PR.**
+Use the originating issue number from Step 0 for `<N>` in `finish.sh merge` and `finish.sh cleanup`.
 Approval covers the reported commit. If new commits arrived locally or on the PR, review their
 diff and repeat Steps 5–7 as a new review cycle with the tier's pass cap, then obtain approval
 for that head. A stale receipt requires this same cycle, not just another test run.
