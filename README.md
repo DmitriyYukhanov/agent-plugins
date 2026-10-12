@@ -58,7 +58,7 @@ Four plugins here drive Claude Code itself and have nothing to do inside Codex: 
 | [learning-guide](#learning-guide) | development | Generate single-file, interactive HTML learning guides |
 | [lsp-setup](#lsp-setup) | development | Detect project languages and set up LSP servers and Claude Code LSP plugins |
 | [python-dev](#python-dev) | development | Python development workflow: architecture, coding guidelines, pytest patterns, and a review agent |
-| [tg-essentials](#tg-essentials) | operations | Telegram toolkit: error alerts for any project through a bot, and Telegram as yourself from Telegram Desktop |
+| [tg-essentials](#tg-essentials) | operations | Telegram toolkit: error alerts and deployment announcements through a bot, and Telegram as yourself from Telegram Desktop |
 | [tg-voice](#tg-voice) | operations | Transcribe Telegram voice messages automatically with local Whisper |
 | [typescript-dev](#typescript-dev) | development | TypeScript development workflow: architecture, coding guidelines, testing patterns, and a review agent |
 | [unity-dev](#unity-dev) | development | Unity C# workflow: architecture, coding guidelines, tests, CLI builds and runs, and review agents |
@@ -203,6 +203,7 @@ Python development workflow with:
 
 Telegram toolkit, named `tg-alerts` before 2.0.0:
 - `tg-alerts` skill: error and alert notifications for any project through a bot. Interactive 7-phase setup (@BotFather bot creation, chat ID discovery, code generation, integration, testing), reference implementations for Python async (FastAPI), Python sync (Django/Flask) and Node.js/TypeScript (Express/NestJS), with deduplication, HTML formatting and fire-and-forget delivery that never crashes the host app
+- `tg-announce` skill: short deployment announcements with a checked format, a saved UTF-8 message and explicit delivery results. Works in Claude Code and Codex, reuses the alert bot, and retries nothing after an uncertain response
 - `tg-account` skill: talks to Telegram as you through the session Telegram Desktop already keeps on disk, so you don't log in or scan a QR code. It finds chats and forum topics, exports history to one text file per day, creates groups, sends, edits and pins posts, posts native checklists and sets the group photo. Posts and checklists can target a forum topic. Every write waits for your yes first
 
 [View documentation](./plugins/tg-essentials/README.md)
