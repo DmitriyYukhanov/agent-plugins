@@ -46,9 +46,13 @@ source = "git@github.com:DmitriyYukhanov/agent-plugins.git"
 ref = "main"
 ```
 
-Preserve the installation's existing protocol and ref. An HTTPS source should
-remain HTTPS. Leave every `[plugins."<plugin>@dmitriy-claude-plugins"]` block
-unchanged, including plugins whose `enabled` flag is `false`.
+Preserve the installation's existing protocol and ref when they work. If a
+native refresh fails because the existing SSH transport cannot authenticate,
+back up `config.toml` again and change only this registration's source to
+`https://github.com/DmitriyYukhanov/agent-plugins.git`. Retry the same refresh.
+Keep global Git transport settings, credentials, and account selection unchanged.
+Leave every `[plugins."<plugin>@dmitriy-claude-plugins"]` block unchanged,
+including plugins whose `enabled` flag is `false`.
 
 For Claude Code, inspect the existing entry in
 `<configuration-root>/plugins/known_marketplaces.json`. A GitHub registration
@@ -78,6 +82,42 @@ needs no Git remote change.
 ```sh
 git -C <marketplace-checkout> remote set-url origin git@github.com:DmitriyYukhanov/agent-plugins.git
 ```
+
+If that checkout's SSH origin prevents the native refresh, back up `.git/config`
+and set only its origin to the HTTPS address before retrying. A successful native
+refresh needs no transport change.
+
+### Repair a cache outside its profile
+
+Claude Code can reject a registered `installLocation` with a `corrupted
+installLocation` error when the path is outside that profile's
+`plugins/marketplaces/` directory. A shared seed copied from another profile can
+trigger this check even when its catalog files are present.
+
+Back up the profile's `settings.json`, `plugins/installed_plugins.json`, and
+`plugins/known_marketplaces.json`. Change only the affected marketplace's
+`installLocation` to
+`<configuration-root>/plugins/marketplaces/dmitriy-claude-plugins`. Check that the
+resolved path is inside that profile's marketplace directory and does not
+overwrite another checkout. Then run the native refresh against that profile:
+
+```sh
+claude plugin marketplace update dmitriy-claude-plugins --json
+```
+
+In the tested repair, this command created the missing cache as a Git checkout
+and refreshed its catalog. Parse the resulting metadata and compare it with the
+backups: settings and installed plugin records should remain equal, while the
+affected registration can have the new cache path and refresh metadata. Verify
+that its source and auto-update preference are unchanged and that other
+marketplace registrations are equal to their backups. Leave the shared seed and
+its owner scripts unchanged.
+
+Avoid the error message's suggested marketplace removal when preserving existing
+installs. That command can uninstall plugins and delete their saved state. The
+cache path repair does not require it.
+
+### Verify the registration
 
 For validation and a deliberate catalog refresh:
 
