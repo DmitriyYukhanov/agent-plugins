@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-10-11
+
+### Added
+- List forum topics by name and ID, and post messages or checklists into a selected topic.
+
 ## [2.1.0] - 2026-10-04
 
 ### Added

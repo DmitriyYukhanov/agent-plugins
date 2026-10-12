@@ -5,13 +5,14 @@ the exact target and text and get a yes before running it.
 
 Usage:
   tg_write.py group TITLE MEMBER [MEMBER ...]   create a basic group, print its id
-  tg_write.py send CHAT FILE [--pin]            send FILE (UTF-8, Markdown), print message id
+  tg_write.py send CHAT FILE [--pin] [--topic ID]  send FILE (UTF-8, Markdown), print message id
   tg_write.py edit CHAT MSG_ID FILE             replace the text of your own message
-  tg_write.py todo CHAT FILE [--pin]            send a native checklist (needs Telegram Premium)
+  tg_write.py todo CHAT FILE [--pin] [--topic ID]  send a native checklist (needs Telegram Premium)
   tg_write.py photo CHAT IMAGE                  set the group or channel photo
 Every command takes --account ID; it is required when tdata holds more than one account.
 
 MEMBER and CHAT: @username, t.me link or numeric id from tg_find.py.
+TOPIC: a forum topic ID from tg_find.py --topics CHAT; 1 is General.
 Checklist FILE: first line is the title, each next line one task. Telegram's limits (app config,
 Bot API docs at the time of writing): title 1-255 chars, 1-30 tasks, task 1-100 chars.
 A task starting with "[x] " is sent already ticked; "[ ] " is optional for open ones.
@@ -28,6 +29,16 @@ def read(path):
 
 def twe(text):
     return types.TextWithEntities(text=text, entities=[])
+
+
+def topic_id(value):
+    try:
+        value = int(value)
+        if 1 <= value <= 2147483647:
+            return value
+    except ValueError:
+        pass
+    raise argparse.ArgumentTypeError("topic ID must be an integer from 1 to 2147483647")
 
 
 def parse_todo(text):
@@ -71,13 +82,21 @@ async def in_chat(act):
     try:
         # The resolved target, so a wrong id shows up in the output, not only in the chat.
         print(f"account={acc} chat={name(ent)!r} ({ent.id})", flush=True)
+        if getattr(a, "topic", None) is not None:
+            if not isinstance(ent, types.Channel) or not ent.forum:
+                sys.exit("--topic requires a forum group")
+            result = await c(functions.messages.GetForumTopicsByIDRequest(peer=ent, topics=[a.topic]))
+            topic = next((t for t in result.topics if isinstance(t, types.ForumTopic) and t.id == a.topic), None)
+            if topic is None:
+                sys.exit(f"topic {a.topic} not found in this forum; run tg_find.py --topics CHAT")
+            print(f"topic={topic.title!r} ({topic.id})", flush=True)
         await act(c, ent)
     finally:
         await c.disconnect()
 
 
 async def send(c, ent):
-    m = await c.send_message(ent, read(a.file), link_preview=False)
+    m = await c.send_message(ent, read(a.file), link_preview=False, reply_to=None if a.topic == 1 else a.topic)
     print(f"message={m.id}", flush=True)  # before the pin: a failed pin must not invite a duplicate send
     if a.pin:
         await c.pin_message(ent, m, notify=False)
@@ -94,7 +113,7 @@ async def todo(c, ent):
     items = [types.TodoItem(id=i, title=twe(text)) for i, (text, _) in enumerate(tasks, 1)]
     done = [i for i, (_, ticked) in enumerate(tasks, 1) if ticked]
     todo = types.TodoList(title=twe(title), list=items, others_can_complete=True)
-    m = await c.send_file(ent, types.InputMediaTodo(todo=todo))
+    m = await c.send_file(ent, types.InputMediaTodo(todo=todo), reply_to=None if a.topic == 1 else a.topic)
     print(f"message={m.id} tasks={len(items)}", flush=True)  # before the follow-ups, as in send
     if done:
         await c(functions.messages.ToggleTodoCompletedRequest(peer=ent, msg_id=m.id, completed=done, incompleted=[]))
@@ -133,6 +152,8 @@ if __name__ == "__main__":
     t.add_argument("chat")
     t.add_argument("file")
     t.add_argument("--pin", action="store_true")
+    for x in (s, t):
+        x.add_argument("--topic", type=topic_id, metavar="ID", help="forum topic ID from tg_find.py --topics CHAT (1 is General)")
     ph = sub.add_parser("photo")
     ph.add_argument("chat")
     ph.add_argument("image")
