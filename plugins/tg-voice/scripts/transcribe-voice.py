@@ -18,11 +18,11 @@ def main():
     except (json.JSONDecodeError, EOFError):
         return
 
-    tool_result = hook_input.get("tool_result", "")
-    if isinstance(tool_result, dict):
-        file_path = tool_result.get("path", tool_result.get("file_path", ""))
+    tool_response = hook_input.get("tool_response", hook_input.get("tool_result", ""))
+    if isinstance(tool_response, dict):
+        file_path = tool_response.get("path", tool_response.get("file_path", ""))
     else:
-        file_path = str(tool_result).strip()
+        file_path = str(tool_response).strip()
 
     if not file_path:
         return
@@ -92,12 +92,17 @@ def main():
 
     lang = getattr(info, "language", "unknown")
     prob = getattr(info, "language_probability", 0)
+    transcription = (
+        f"Voice message transcription "
+        f"(language: {lang}, confidence: {prob:.0%}):\n\n{text}"
+    )
     json.dump(
         {
-            "systemMessage": (
-                f"Voice message transcription "
-                f"(language: {lang}, confidence: {prob:.0%}):\n\n{text}"
-            )
+            "systemMessage": transcription,
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": transcription,
+            },
         },
         sys.stdout,
     )

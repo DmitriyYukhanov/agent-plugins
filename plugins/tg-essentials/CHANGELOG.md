@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.1] - 2026-10-12
+
+### Changed
+- Refresh installation links and catalog descriptions for the agent plugins collection.
+
 ## [2.3.0] - 2026-10-12
 
 ### Added

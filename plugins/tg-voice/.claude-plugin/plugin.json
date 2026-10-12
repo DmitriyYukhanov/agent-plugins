@@ -1,7 +1,8 @@
 {
   "name": "tg-voice",
-  "version": "1.0.1",
-  "description": "Transcribe Telegram voice messages using local Whisper (faster-whisper) — automatic PostToolUse hook with setup skill for installation and model download",
+  "version": "1.0.2",
+  "description": "Transcribe Telegram voice notes locally through a Claude Code download hook.",
+  "hooks": "./.claude-plugin/hooks/hooks.json",
   "author": {
     "name": "Dmitry Yuhanov"
   }

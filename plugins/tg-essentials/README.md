@@ -4,6 +4,17 @@ Telegram toolkit for agents. Error alerts and short deployment announcements go 
 
 Renamed from `tg-alerts` in 2.0.0. If you had the old plugin, uninstall `tg-alerts` and install `tg-essentials`. The alerts skill is now `tg-essentials:tg-alerts`, so update any CLAUDE.md or AGENTS.md line that names `tg-alerts:tg-alerts`.
 
+## Host compatibility
+
+Use the shared skills in Claude Code or Codex. Resolve bundled files from the installed skill directory and use the current host's tools. Optional Claude agent adapters have a direct or sequential skill fallback. See the [compatibility audit](../../docs/plugin-compatibility.md) for runtime coverage and requirements.
+
+Codex installation:
+
+```sh
+codex plugin marketplace add DmitriyYukhanov/agent-plugins
+codex plugin add tg-essentials@dmitriy-claude-plugins
+```
+
 ## Installation
 
 ```bash

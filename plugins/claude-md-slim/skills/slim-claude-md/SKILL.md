@@ -17,10 +17,12 @@ content quality against templates is what `claude-md-management`'s `claude-md-im
 Mechanics (load order, `paths:` syntax, the `@import` trap, `/doctor`, hierarchy) live in
 [references/mechanics.md](references/mechanics.md). Read the section you need when you need it.
 
+Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root. Replace `<absolute-plugin-root>` below with that path and verify both scripts under `skills/slim-claude-md/scripts/` exist. If a resource is unavailable, report the missing path and stop; do not assume a host environment variable supplies it.
+
 ## Phase 1 — Measure
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/slim-claude-md/scripts/audit_claude_md.py" CLAUDE.md
+python "<absolute-plugin-root>/skills/slim-claude-md/scripts/audit_claude_md.py" CLAUDE.md
 ```
 
 Reports loaded size (HTML comments excluded, since they are stripped before loading), ranks sections
@@ -107,7 +109,7 @@ The pointer is load-bearing. If the glob ever fails to match, a reader still kno
 ## Phase 5 — Verify nothing was lost
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/slim-claude-md/scripts/verify_extraction.py" \
+python "<absolute-plugin-root>/skills/slim-claude-md/scripts/verify_extraction.py" \
     --original-git HEAD:CLAUDE.md \
     --section "API" --section "Billing" \
     --now .claude/rules/api.md --now .claude/rules/billing.md

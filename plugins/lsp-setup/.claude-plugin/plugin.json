@@ -1,5 +1,0 @@
-{
-  "name": "lsp-setup",
-  "version": "1.0.2",
-  "description": "Set up LSP (Language Server Protocol) for Claude Code projects with auto-detection, plugin installation, and validation"
-}

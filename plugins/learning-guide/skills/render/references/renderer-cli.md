@@ -1,15 +1,17 @@
 # Renderer CLI
 
-The renderer is `${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs`. Zero-dependency Node script — no `npm install`.
+The renderer is the bundled `scripts/render.cjs`. It uses Node's standard library and needs no `npm install`.
+
+Resolve the absolute plugin root from the installed skill location as described in [SKILL.md](../SKILL.md). Replace `<absolute-plugin-root>` in these commands with that path, verify the renderer exists, and use quoted absolute spec and output paths. These examples require no host environment variable.
 
 ## Usage
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs" <tour-spec.json> [--output-dir <dir>]
+node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>" [--output-dir "<absolute-output-dir>"]
 ```
 
-- `<tour-spec.json>` — required path to a valid tour spec.
-- `--output-dir <dir>` — defaults to the spec file's parent directory.
+- `<absolute-spec-path>` is the required path to a valid tour spec.
+- `--output-dir "<absolute-output-dir>"` defaults to the spec file's parent directory.
 
 ## Exit codes
 
@@ -36,10 +38,10 @@ Set `renderer.include_mermaid: false` to render without diagrams at all.
 
 - Re-render after editing the spec:
   ```bash
-  node "${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs" tour-spec.json
+  node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>"
   ```
 - Render to a different output directory:
   ```bash
-  node "${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs" tour-spec.json --output-dir build/tour
+  node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>" --output-dir "<absolute-output-dir>"
   ```
 - Force-disable Mermaid even if a diagram is present: set `renderer.include_mermaid` to `false` in the spec.

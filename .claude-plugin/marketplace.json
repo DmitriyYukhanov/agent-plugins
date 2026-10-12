@@ -1,165 +1,145 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "dmitriy-claude-plugins",
-  "description": "Personal collection of Claude Code plugins for development workflows and productivity",
+  "description": "Reusable skills and plugins for AI agents: development workflows, writing, and automation.",
   "owner": {
     "name": "Dmitry Yuhanov"
   },
-  "allowCrossMarketplaceDependenciesOn": ["openai-codex"],
+  "allowCrossMarketplaceDependenciesOn": [
+    "openai-codex"
+  ],
   "plugins": [
     {
       "name": "unity-dev",
-      "description": "Unity C# development workflow with architecture design, coding guidelines, testing patterns, and specialized review agents",
-      "version": "1.8.0",
+      "description": "Develop and test Unity projects with shared C# guidance and editor discovery scripts.",
+      "version": "1.9.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/unity-dev",
       "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "python-dev",
-      "description": "Python development workflow with architecture design, coding guidelines, testing patterns, and specialized review agents",
-      "version": "1.3.0",
+      "description": "Develop Python projects with shared architecture, implementation, review, and testing guidance.",
+      "version": "1.4.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/python-dev",
       "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "typescript-dev",
-      "description": "TypeScript development workflow with architecture design, coding guidelines, testing patterns, and specialized review agents",
-      "version": "1.3.0",
+      "description": "Develop TypeScript projects with shared architecture, implementation, review, and testing guidance.",
+      "version": "1.4.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/typescript-dev",
       "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
-    },
-    {
-      "name": "agent-teams",
-      "description": "Set up and orchestrate Claude Code agent teams - multiple instances working together with shared tasks, messaging, and coordination",
-      "version": "1.0.2",
-      "author": {
-        "name": "Dmitry Yuhanov"
-      },
-      "source": "./plugins/agent-teams",
-      "category": "productivity",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "codex-collaboration",
-      "description": "Cross-model collaboration between Claude and Codex — sequential drive/validate/act loops and parallel dual review with triage",
-      "version": "1.13.0",
+      "description": "Coordinate Claude-led analysis and Codex validation through shared review and verdict contracts.",
+      "version": "1.13.1",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/codex-collaboration",
       "category": "workflow",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "implementation-prd",
-      "description": "Implementation-ready spec bundle authoring for apps, services, platforms, and complex features",
-      "version": "1.2.0",
+      "description": "Write implementation-ready product specs with contracts, data models, and test plans.",
+      "version": "1.3.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/implementation-prd",
       "category": "productivity",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "learning-guide",
-      "description": "Generate a single-file, interactive HTML learning guide for any artifact — codebase, planning session, refactor plan, or generic input — via an analyze → render flow with a JSON tour-spec contract",
-      "version": "4.0.0",
+      "description": "Build interactive HTML learning guides with embedded sources, quizzes, and navigation.",
+      "version": "4.1.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/learning-guide",
       "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
-    },
-    {
-      "name": "lsp-setup",
-      "description": "Set up LSP (Language Server Protocol) for Claude Code projects with auto-detection, plugin installation, and validation",
-      "version": "1.0.2",
-      "author": {
-        "name": "Dmitry Yuhanov"
-      },
-      "source": "./plugins/lsp-setup",
-      "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "tg-essentials",
-      "description": "Telegram toolkit: error alerts and short deployment announcements through a bot, plus reading and writing Telegram as yourself from the local Telegram Desktop session (chats, exports, groups, posts, checklists)",
-      "version": "2.3.0",
+      "description": "Read and manage Telegram chats, send bot alerts, and publish checked deployment announcements.",
+      "version": "2.3.1",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/tg-essentials",
       "category": "operations",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "tg-voice",
-      "description": "Transcribe Telegram voice messages using local Whisper (faster-whisper) — automatic PostToolUse hook with setup skill for installation and model download",
-      "version": "1.0.1",
+      "description": "Transcribe Telegram voice notes locally through a Claude Code download hook.",
+      "version": "1.0.2",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/tg-voice",
       "category": "operations",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "humanizer",
-      "description": "Remove AI-generation patterns from English or Russian text — auto-detects language and applies a matching MIT-licensed ruleset (33-pattern EN from blader/humanizer, 54-pattern RU from ilyautov/humanizer-ru) with explicit override and mixed-text handling",
-      "version": "1.3.1",
+      "description": "Remove common AI writing patterns from English and Russian text using the matching ruleset.",
+      "version": "1.3.2",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/humanizer",
       "category": "writing",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "agent-dispatch",
-      "description": "Start issue-to-pr runs from GitHub labels on your own machine: a scheduled tick picks the issue you labelled agent, or the one you replied on, and runs it headless under your own Claude Code or Codex login, on Windows, macOS or Linux.",
-      "version": "1.3.2",
+      "description": "Run queued GitHub issues locally through Claude Code or Codex, with scheduled dispatch and recovery.",
+      "version": "1.3.3",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/agent-dispatch",
       "category": "workflow",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "issue-to-pr",
-      "description": "Take a GitHub issue (bare, or tracked on a Project board) from triage to a merge-ready PR through a gated, worktree-isolated pipeline that scales its depth to the task and asks at most one batched question. The gates hold every run: design hardening, tests green, code review clean. Once you approve the PR in-session it squash-merges, reporting GitHub's own message if the merge is refused, then tears down the branch and worktree; a merge into anything but the default branch is reported as one, since that is where the issue's auto-close depends. The board card advances as work moves.",
-      "version": "9.10.0",
+      "description": "Take GitHub issues to reviewed pull requests through isolated worktrees, tests, and explicit merge gates.",
+      "version": "9.10.1",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/issue-to-pr",
       "category": "workflow",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     },
     {
       "name": "claude-md-slim",
-      "description": "Shrink an oversized or stale CLAUDE.md by moving subsystem detail into path-scoped .claude/rules/ files, with scripts that measure the loaded size against the documented 200-line budget and prove the extraction lost nothing",
-      "version": "1.0.1",
+      "description": "Audit and split oversized CLAUDE.md instructions, with checks that preserve their content.",
+      "version": "1.1.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },
       "source": "./plugins/claude-md-slim",
       "category": "development",
-      "homepage": "https://github.com/DmitriyYukhanov/claude-plugins"
+      "homepage": "https://github.com/DmitriyYukhanov/agent-plugins"
     }
   ]
 }

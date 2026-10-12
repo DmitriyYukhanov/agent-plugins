@@ -5,6 +5,11 @@ All notable changes to the **codex-collaboration** plugin will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.13.1] - 2026-10-12
+
+### Changed
+- Refresh installation links and catalog descriptions for the agent plugins collection.
+
 ## [1.13.0] - 2026-09-29
 
 ### Fixed

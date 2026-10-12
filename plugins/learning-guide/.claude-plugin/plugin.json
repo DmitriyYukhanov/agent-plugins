@@ -1,5 +1,5 @@
 {
   "name": "learning-guide",
-  "version": "3.0.0",
-  "description": "Generate a single-file, interactive HTML learning guide for any artifact — codebase, planning session, refactor plan, or generic input — via an analyze → render flow with a JSON tour-spec contract"
+  "version": "4.1.0",
+  "description": "Build interactive HTML learning guides with embedded sources, quizzes, and navigation."
 }
