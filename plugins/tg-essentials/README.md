@@ -1,6 +1,6 @@
 # tg-essentials
 
-Telegram toolkit for agents. Error alerts for your projects go out through a bot, and everything you do in Telegram as yourself (chats, exports, groups, posts, checklists) runs through your local Telegram Desktop session.
+Telegram toolkit for agents. Error alerts and short deployment announcements go out through a bot, and everything you do in Telegram as yourself (chats, exports, groups, posts, checklists) runs through your local Telegram Desktop session.
 
 Renamed from `tg-alerts` in 2.0.0. If you had the old plugin, uninstall `tg-alerts` and install `tg-essentials`. The alerts skill is now `tg-essentials:tg-alerts`, so update any CLAUDE.md or AGENTS.md line that names `tg-alerts:tg-alerts`.
 
@@ -26,6 +26,14 @@ Interactive setup in seven phases:
 
 Reference implementations included for Python async (FastAPI), Python sync (Django/Flask), and Node.js/TypeScript (Express/NestJS). The generated service deduplicates repeated errors, formats messages as HTML, delivers fire-and-forget, and never crashes the host app when Telegram is unreachable.
 
+### Skill: `tg-announce`
+
+Compose a short release summary from verified deployment evidence and send it to an operational chat or forum topic. The skill works in Claude Code and Codex and reuses the existing alert bot and `ALERT_*` setup.
+
+One bundled Python script checks `announcement-v1` before sending. The format allows a deployment tag or revision and up to eight sentence-length bullets, including an honest empty-release form. `announce` sends a checked release note, `note` escapes arbitrary plain text, and `check` validates a saved UTF-8 file without credentials or network access. The executable stays in the installed plugin; consuming projects keep their own release orchestration.
+
+Delivery returns `SENT` (exit 0, message ID), `NOT_SENT` (exit 1, local rejection or confirmed API refusal), or `UNKNOWN` (exit 2, delivery unconfirmed). The script retries nothing and preserves the message file. After `UNKNOWN`, check the destination before a manual retry. The release flow owns rerun identity and prior results; the sender stores no receipts. See the [skill](skills/tg-announce/SKILL.md) for composition, authorization and integration.
+
 ### Skill: `tg-account`
 
 Talks to Telegram as you, using the session Telegram Desktop already keeps on disk. You don't log in or scan a QR code.
@@ -46,6 +54,7 @@ For forum groups, run `tg_find.py --topics CHAT [--account ID]` to see topic nam
 
 ```text
 Add Telegram error alerts to this project
+Announce the verified deploy in the operations topic
 Export last week of the work chat
 Create a Telegram group with @alice, pin the agenda and a checklist
 ```

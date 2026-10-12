@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-10-12
+
+### Added
+- Send short deployment announcements and operational notes, with format checks and explicit delivery outcomes.
+
 ## [2.2.0] - 2026-10-11
 
 ### Added
