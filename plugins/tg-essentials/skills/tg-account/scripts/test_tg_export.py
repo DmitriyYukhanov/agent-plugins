@@ -20,6 +20,7 @@ import tg_transcribe
 
 
 DATE = dt.datetime(2026, 10, 4, 12, tzinfo=dt.timezone.utc)
+CANCEL_TIMEOUT = 5  # Windows taskkill can take over two seconds to stop the process tree.
 
 FAKE_WHISPER = '''
 import json, pathlib, time
@@ -327,7 +328,7 @@ class ExportTranscription(unittest.IsolatedAsyncioTestCase):
             asyncio.get_running_loop().call_soon(yielded.set_result, None)
             await yielded
             task.cancel()
-            done, _ = await asyncio.wait([task], timeout=2)
+            done, _ = await asyncio.wait([task], timeout=CANCEL_TIMEOUT)
             self.assertIn(task, done, "Cancellation must stop a stalled decoder")
             with self.assertRaises(asyncio.CancelledError):
                 await task
@@ -363,7 +364,7 @@ class ExportTranscription(unittest.IsolatedAsyncioTestCase):
                 await asyncio.wait_for(started.wait(), timeout=3)
                 task.cancel()
                 with self.assertRaises(asyncio.CancelledError):
-                    await asyncio.wait_for(task, timeout=2)
+                    await asyncio.wait_for(task, timeout=CANCEL_TIMEOUT)
             finally:
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
@@ -383,7 +384,7 @@ class ExportTranscription(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(await asyncio.to_thread(wait_for_setup))
         task.cancel()
-        done, _ = await asyncio.wait([task], timeout=2)
+        done, _ = await asyncio.wait([task], timeout=CANCEL_TIMEOUT)
         self.assertIn(task, done)
         with self.assertRaises(asyncio.CancelledError):
             await task
