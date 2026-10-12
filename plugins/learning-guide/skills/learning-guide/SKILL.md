@@ -3,7 +3,7 @@ name: learning-guide
 description: Use when the user asks to "create a learning guide", "make an interactive tour", "generate onboarding doc", "build a learning module", or any variant of turning an artifact (codebase, planning session, refactor plan, design doc) into an interactive HTML guide. Dispatches to learning-guide:analyze for new tours or learning-guide:render for re-renders after spec edits. Also use when the user is uncertain which step they need.
 ---
 
-# Learning Guide — Entry Point
+# Learning guide entry point
 
 Discoverability shim. Decides whether the user needs to start fresh (analyze) or re-render an existing spec (render).
 
@@ -15,7 +15,8 @@ Discoverability shim. Decides whether the user needs to start fresh (analyze) or
 
 2. **Does the user want to manually edit `tour-spec.json` and just re-render?**
    - Confirm Node is on PATH.
-   - Tell them they can run `node "${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs" tour-spec.json` directly. They don't need to invoke any skill for that.
+   - Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root and verify `scripts/render.cjs` exists. If it is unavailable, report the missing path instead of offering a command that cannot run.
+   - Give them `node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>"` with both placeholders replaced by the resolved paths. The command needs no host environment variable or skill invocation.
 
 ## When NOT to use this skill
 

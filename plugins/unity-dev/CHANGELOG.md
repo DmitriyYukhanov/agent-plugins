@@ -5,6 +5,11 @@ All notable changes to the **unity-dev** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-10-12
+
+### Changed
+- Use shared workflows and resource paths across agent hosts.
+
 ## [1.8.0] - 2026-09-29
 
 ### Changed

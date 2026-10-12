@@ -1,7 +1,7 @@
 {
   "name": "claude-md-slim",
-  "version": "1.0.1",
-  "description": "Shrink an oversized or stale CLAUDE.md by moving subsystem detail into path-scoped .claude/rules/ files, with scripts that measure the loaded size against the documented 200-line budget and prove the extraction lost nothing",
+  "version": "1.1.0",
+  "description": "Audit and split oversized CLAUDE.md instructions, with checks that preserve their content.",
   "author": {
     "name": "Dmitry Yuhanov"
   }

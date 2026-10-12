@@ -1,7 +1,7 @@
 {
   "name": "tg-essentials",
-  "version": "2.3.0",
-  "description": "Telegram toolkit: error alerts and short deployment announcements through a bot, plus reading and writing Telegram as yourself from the local Telegram Desktop session (chats, exports, groups, posts, checklists)",
+  "version": "2.3.1",
+  "description": "Read and manage Telegram chats, send bot alerts, and publish checked deployment announcements.",
   "author": {
     "name": "Dmitry Yuhanov"
   }

@@ -29,11 +29,15 @@ Create or update a spec bundle with these files:
 
 Do not omit state design. If there is no durable storage delta, use the data-model artifact and state explicitly where state lives and why no schema change is needed.
 
-When starting from scratch, scaffold the bundle with:
+When starting from scratch, use the bundled scaffold script.
+
+Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root. Replace `<absolute-plugin-root>` below with that path and verify `scripts/init-spec-bundle.sh` exists. If the resource is unavailable, report the missing path and stop; do not assume a host environment variable supplies it.
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/init-spec-bundle.sh" <slug> <product|feature|system> [output_dir] [sql|data-model]
+bash "<absolute-plugin-root>/scripts/init-spec-bundle.sh" <slug> <product|feature|system> [output_dir] [sql|data-model]
 ```
+
+Quote an explicit output directory after resolving it to an absolute path. Keep the script's refusal to overwrite existing files; choose a new destination or update existing specs deliberately.
 
 ## Working Rules
 

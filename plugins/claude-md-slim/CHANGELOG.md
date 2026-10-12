@@ -5,6 +5,11 @@ All notable changes to the **claude-md-slim** plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-12
+
+### Changed
+- Use shared workflows and resource paths across agent hosts.
+
 ## [1.0.1] - 2026-07-21
 
 ### Changed

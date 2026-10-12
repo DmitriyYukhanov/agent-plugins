@@ -1,7 +1,7 @@
 {
   "name": "unity-dev",
-  "version": "1.8.0",
-  "description": "Unity C# development workflow with architecture design, coding guidelines, testing patterns, and specialized review agents",
+  "version": "1.9.0",
+  "description": "Develop and test Unity projects with shared C# guidance and editor discovery scripts.",
   "author": {
     "name": "Dmitry Yuhanov"
   }

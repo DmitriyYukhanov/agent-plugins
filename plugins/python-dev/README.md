@@ -1,6 +1,17 @@
 # python-dev
 
-A Claude Code plugin for Python development with architecture design, coding guidelines, testing patterns, and specialized review agents.
+Shared Python development skills for architecture, implementation, testing, and review.
+
+## Host compatibility
+
+Use the shared skills in Claude Code or Codex. Resolve bundled files from the installed skill directory and use the current host's tools. Optional Claude agent adapters have a direct or sequential skill fallback. See the [compatibility audit](../../docs/plugin-compatibility.md) for runtime coverage and requirements.
+
+Codex installation:
+
+```sh
+codex plugin marketplace add DmitriyYukhanov/agent-plugins
+codex plugin add python-dev@dmitriy-claude-plugins
+```
 
 ## Installation
 
@@ -10,7 +21,7 @@ A Claude Code plugin for Python development with architecture design, coding gui
 
 ## Features
 
-### Command: `/python-dev`
+### Skill: `python-dev:python-dev`
 
 Orchestrates a complete Python development workflow:
 

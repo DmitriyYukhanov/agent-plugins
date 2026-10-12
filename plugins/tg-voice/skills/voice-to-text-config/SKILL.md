@@ -61,9 +61,9 @@ print(f'Model \"{model}\" downloaded and ready.')
 
 **Important**: This download can take 1-3 minutes on first run. Let the user know progress is happening.
 
-### 3. End-to-end test
+### 3. Check the transcription engine
 
-If there's a voice file in the Telegram inbox, test transcription against it:
+If there's a voice file in the Telegram inbox, test transcription against it. This direct Whisper call checks the engine; it does not verify that Claude Code runs the hook or receives its output.
 
 ```bash
 python -c "
@@ -89,13 +89,11 @@ print(f'Transcription: {text}')
 
 ### 4. Verify hook is registered
 
-Check that the transcription hook exists in the plugin:
+Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root. Read `.claude-plugin/plugin.json` and resolve its `hooks` path from that root; if the field is absent, check the default `hooks/hooks.json`. Verify the registered configuration exists and contains a `PostToolUse` command targeting `mcp__plugin_telegram_telegram__download_attachment`.
 
-```bash
-cat "${CLAUDE_PLUGIN_ROOT}/.claude-plugin/hooks/hooks.json" 2>/dev/null || cat "${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json" 2>/dev/null
-```
+Check that the command's script exists. A hooks file in an undeclared custom location does not establish registration.
 
-Confirm it targets `mcp__plugin_telegram_telegram__download_attachment`.
+To verify delivery, observe an actual voice attachment download in Claude Code, then confirm the registered hook runs and its `hookSpecificOutput.additionalContext` contains the transcription. Keep this result separate from the manual engine test. If no actual event has been observed, report delivery as not checked.
 
 ### 5. Report
 
@@ -104,7 +102,8 @@ Summarize:
 - Model size and cache status
 - Test transcription result (if available)
 - Hook registration status
+- Actual hook execution and transcript delivery status
 
-If everything passed, tell the user: "Voice transcription is ready. Send a voice message on Telegram to test it live."
+Claim voice transcription is ready only after an actual hook event confirms delivery. If the prerequisites pass but delivery is not checked, say: "Transcription setup passed. Send a voice message on Telegram to verify the hook delivers its transcript."
 
 If the user wants a different model size, they can set `WHISPER_MODEL` in their environment (e.g., in `.claude/settings.json` env section or system env vars).

@@ -1,7 +1,7 @@
 {
   "name": "typescript-dev",
-  "version": "1.3.0",
-  "description": "TypeScript development workflow with architecture design, coding guidelines, testing patterns, and specialized review agents",
+  "version": "1.4.0",
+  "description": "Develop TypeScript projects with shared architecture, implementation, review, and testing guidance.",
   "author": {
     "name": "Dmitry Yuhanov"
   }

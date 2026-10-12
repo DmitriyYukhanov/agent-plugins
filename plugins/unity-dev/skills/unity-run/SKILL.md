@@ -17,8 +17,10 @@ If the user provides a project path explicitly, use that instead.
 
 Use the plugin's detection script:
 
+Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root. Replace `<absolute-plugin-root>` below with that path and verify `scripts/find-unity.sh` exists. If the resource is unavailable, report the missing path and stop; do not assume a host environment variable supplies it.
+
 ```bash
-UNITY_PATH=$("${CLAUDE_PLUGIN_ROOT}/scripts/find-unity.sh" "<project-root>")
+UNITY_PATH=$("<absolute-plugin-root>/scripts/find-unity.sh" "<project-root>")
 ```
 
 The script auto-detects Unity via Hub config, default paths, and Hub CLI fallback. It reads the project's `ProjectVersion.txt` to find the matching editor version.

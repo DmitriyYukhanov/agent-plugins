@@ -1,6 +1,6 @@
-# Claude Plugins Repository
+# Agent Plugins Repository
 
-Collection of Claude Code plugins: skills, agents, hooks, and scripts. Issues and PRs live in `DmitriyYukhanov/claude-plugins`.
+Collection of agent skills and host integrations: agents, hooks, and scripts. Issues and PRs live in `DmitriyYukhanov/agent-plugins`. Shared skills use one capability-driven workflow; installation and host-specific features require separate support and validation.
 
 ## Repository hygiene
 
@@ -66,7 +66,7 @@ Tracked hooks live in `.githooks/`. After cloning, run `git config core.hooksPat
 
 ## Skill writing
 
-Skill authoring guidance (frontmatter, SKILL.md structure, scripts, subagents, validation) lives in [`docs/skill-creation.md`](docs/skill-creation.md).
+Before creating or changing a skill, read [`docs/skill-creation.md`](docs/skill-creation.md) for portable metadata, host extensions, capability and resource requirements, delegation, and validation. Keep generic skills independent of mandatory vendor CLIs or model settings. Declare host integration exceptions explicitly. Distinguish contract checks from behavioral evidence and report unavailable optional adapter checks without blocking unrelated work or releases.
 
 ## Repository structure
 
@@ -96,7 +96,7 @@ docs/
 
 ### Issue tracker
 
-Issues live as GitHub issues in `DmitriyYukhanov/claude-plugins`, driven through the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live as GitHub issues in `DmitriyYukhanov/agent-plugins`, driven through the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

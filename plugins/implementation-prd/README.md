@@ -2,6 +2,17 @@
 
 A Claude Code plugin for writing implementation-ready spec bundles that another coding agent can build from directly across frontend, backend, desktop, mobile, SaaS, platform, and feature work.
 
+## Host compatibility
+
+Use the shared skills in Claude Code or Codex. Resolve bundled files from the installed skill directory and use the current host's tools. Optional Claude agent adapters have a direct or sequential skill fallback. See the [compatibility audit](../../docs/plugin-compatibility.md) for runtime coverage and requirements.
+
+Codex installation:
+
+```sh
+codex plugin marketplace add DmitriyYukhanov/agent-plugins
+codex plugin add implementation-prd@dmitriy-claude-plugins
+```
+
 ## Installation
 
 ```bash
@@ -32,10 +43,12 @@ Scaffolds the standard bundle:
 
 Usage:
 
-```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/init-spec-bundle.sh" my-feature feature docs/specs/my-feature sql
+Locate the installed `skills/implementation-prd/SKILL.md` using the host's skill metadata or file tools, then resolve `../..` from its directory to get the absolute plugin root. Replace `<absolute-plugin-root>` below with that path and verify `scripts/init-spec-bundle.sh` exists. Replace each output placeholder with a quoted absolute destination path.
 
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/init-spec-bundle.sh" billing-worker system docs/specs/billing-worker data-model
+```bash
+bash "<absolute-plugin-root>/scripts/init-spec-bundle.sh" my-feature feature "<absolute-feature-output-dir>" sql
+
+bash "<absolute-plugin-root>/scripts/init-spec-bundle.sh" billing-worker system "<absolute-worker-output-dir>" data-model
 ```
 
 ## Usage

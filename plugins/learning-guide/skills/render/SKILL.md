@@ -3,9 +3,11 @@ name: render
 description: Renders an existing tour-spec.json to a single-file interactive HTML guide via the bundled Node renderer. Use when the user has hand-edited a tour-spec.json, when learning-guide:analyze hands off after drafting, or when the user explicitly asks to "render the tour", "regenerate the HTML", or "update the embedded sources". Idempotent for generated artifacts; preserves user-edited README and tour-spec.json.
 ---
 
-# Render — HTML Generation
+# Render HTML
 
-Take a `tour-spec.json` and produce a single-file `index.html`. This skill is deterministic; the heavy lifting is in `${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs`.
+Take a `tour-spec.json` and produce a single-file `index.html` with the bundled `scripts/render.cjs`.
+
+Locate this installed `SKILL.md` through the current host's skill metadata or file tools. Resolve `../..` from its directory to get the absolute plugin root. Replace `<absolute-plugin-root>` below with that path and verify `scripts/render.cjs` exists before running it. If the resource is unavailable, report the missing path and stop; do not assume a host environment variable supplies it.
 
 ## Trigger phrases
 
@@ -29,7 +31,7 @@ Take a `tour-spec.json` and produce a single-file `index.html`. This skill is de
 
 4. **Run the renderer.**
    ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/render.cjs" "<spec-path>"
+   node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>"
    ```
    If `--output-dir` is needed, pass it explicitly.
 
@@ -39,7 +41,7 @@ Take a `tour-spec.json` and produce a single-file `index.html`. This skill is de
 
 ## Re-running from the shell
 
-The user can re-render without involving Claude by running `node "<plugin-root>/scripts/render.cjs" tour-spec.json`.
+The user can re-render from the shell by running `node "<absolute-plugin-root>/scripts/render.cjs" "<absolute-spec-path>"` with the resolved paths.
 
 ## When NOT to use this skill
 

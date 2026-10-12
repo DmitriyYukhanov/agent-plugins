@@ -6,19 +6,30 @@ GitHub Projects (v2) board**, or a **plain request with no issue yet**; the skil
 one first. The PR always links the issue so it auto-closes on merge; board cards advance
 as work progresses.
 
+## Host compatibility
+
+Use the shared skills in Claude Code or Codex. Resolve bundled files from the installed skill directory and use the current host's tools. Optional Claude agent adapters have a direct or sequential skill fallback. See the [compatibility audit](../../docs/plugin-compatibility.md) for runtime coverage and requirements.
+
+Codex installation:
+
+```sh
+codex plugin marketplace add DmitriyYukhanov/agent-plugins
+codex plugin add issue-to-pr@dmitriy-claude-plugins
+```
+
 ## Installation
 
 Claude Code:
 
 ```bash
-/plugin marketplace add DmitriyYukhanov/claude-plugins
+/plugin marketplace add DmitriyYukhanov/agent-plugins
 /plugin install issue-to-pr@dmitriy-claude-plugins
 ```
 
 Codex (user-wide, across local projects):
 
 ```bash
-codex plugin marketplace add DmitriyYukhanov/claude-plugins
+codex plugin marketplace add DmitriyYukhanov/agent-plugins
 codex plugin add issue-to-pr@dmitriy-claude-plugins
 ```
 

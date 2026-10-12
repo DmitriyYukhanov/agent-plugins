@@ -5,6 +5,14 @@ All notable changes to the **tg-voice** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] - 2026-10-12
+
+### Fixed
+- Restore automatic voice transcription and pass the transcript to the agent.
+
+### Changed
+- Refresh installation links and catalog descriptions for the agent plugins collection.
+
 ## [1.0.1] - 2026-07-13
 
 ### Added

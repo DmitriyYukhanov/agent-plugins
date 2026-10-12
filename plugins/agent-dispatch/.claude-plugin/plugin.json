@@ -1,11 +1,13 @@
 {
   "name": "agent-dispatch",
-  "version": "1.3.2",
-  "description": "Start issue-to-pr runs from GitHub labels on your own machine: a scheduled tick picks the issue you labelled agent, or the one you replied on, and runs it headless under your own Claude Code or Codex login, on Windows, macOS or Linux.",
+  "version": "1.3.3",
+  "description": "Run queued GitHub issues locally through Claude Code or Codex, with scheduled dispatch and recovery.",
   "author": {
     "name": "Dmitry Yuhanov"
   },
   "dependencies": [
-    { "name": "issue-to-pr" }
+    {
+      "name": "issue-to-pr"
+    }
   ]
 }
