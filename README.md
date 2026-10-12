@@ -1,6 +1,6 @@
 # Plugins and skills for AI agents
 
-![Code Stage agent plugins: blue and silver signal streams on a graphite background](./assets/agent-plugins-banner.png)
+![Code Stage agent plugins: blue and silver signal streams on a graphite background](./assets/agent-plugins-signal-weave.png)
 
 [![Last release](https://img.shields.io/github/release-date/DmitriyYukhanov/agent-plugins?label=last%20release)](https://github.com/DmitriyYukhanov/agent-plugins/releases)
 [![Last commit](https://img.shields.io/github/last-commit/DmitriyYukhanov/agent-plugins)](https://github.com/DmitriyYukhanov/agent-plugins/commits/main)
