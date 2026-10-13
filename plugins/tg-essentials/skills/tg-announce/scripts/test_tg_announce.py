@@ -14,6 +14,7 @@ import threading
 import unittest
 from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
+from urllib.parse import SplitResult
 
 import tg_announce
 
@@ -143,6 +144,92 @@ class Sender(unittest.TestCase):
         self.assertGreater(opener.open.call_args.kwargs["timeout"], 0)
         self.assertEqual(self.file.read_bytes(), before)
 
+    def test_operator_origin_accepts_http_https_ports_and_root_slash(self):
+        self.file.write_text(VALID.replace("No audience-visible changes.",
+                                           "See https://untrusted.example/release."), encoding="utf-8")
+        for origin in ("http://telegram-bot-api:8081", "https://bot.example",
+                       "https://bot.example:8443/", "http://[::1]:8081/"):
+            with self.subTest(origin=origin), patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
+                with self.response() as opener:
+                    code, output, errors = self.run_main()
+                self.assertEqual((code, errors), (0, ""))
+                opener.open.assert_called_once()
+                request = opener.open.call_args.args[0]
+                self.assertEqual(request.full_url, f"{origin.rstrip('/')}/bot{TOKEN}/sendMessage")
+                self.assertEqual(request.method, "POST")
+                self.assertEqual(opener.open.call_args.kwargs["timeout"], 10)
+                self.assertNotIn(origin, output)
+
+    def test_invalid_origins_are_rejected_without_network_or_value_echo(self):
+        invalid = ("", "telegram-bot-api:8081", "ftp://bot.example", "https:///missing",
+                   "https://user:password@bot.example", "https://@bot.example",
+                   "https://bot.example/path", "https://bot.example?", "https://bot.example?q=secret",
+                   "https://bot.example#", "https://bot.example#secret", "https://bot.example:0",
+                   "https://bot.example:65536", "https://bot.example:bad", "https://bot.example:",
+                   "https://[broken", " https://bot.example", "https://bot.example\n",
+                   "https://bot.\texample", "https://bot.example\\evil", "https://bot.%65xample",
+                   "https://бот.example", "https://bot.example\x7f")
+        for origin in invalid:
+            with self.subTest(origin=origin), patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
+                with patch.object(tg_announce, "build_opener", side_effect=AssertionError("network")):
+                    code, output, errors = self.run_main()
+                self.assertEqual(code, 1)
+                self.assertEqual(output.strip(), "RESULT=NOT_SENT REASON=config_invalid")
+                self.assertEqual(errors.strip(), "Missing or invalid ALERT_BOT_API_ORIGIN.")
+                self.assertNotIn(TOKEN, output + errors)
+
+    def test_origin_uses_private_dotenv_with_environment_precedence(self):
+        Path(".env").write_text('ALERT_BOT_API_ORIGIN="http://telegram-bot-api:8081/" # private\n',
+                                encoding="utf-8")
+        with self.response() as opener:
+            self.assertEqual(self.run_main()[0], 0)
+            self.assertEqual(opener.open.call_args.args[0].host, "telegram-bot-api:8081")
+        with patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": "https://bot.example"}), self.response() as opener:
+            self.assertEqual(self.run_main()[0], 0)
+            self.assertEqual(opener.open.call_args.args[0].host, "bot.example")
+        with patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": ""}):
+            with patch.object(tg_announce, "build_opener", side_effect=AssertionError("network")):
+                self.assertEqual(self.run_main()[0], 1)
+
+    def test_permissive_python310_parser_cannot_hide_malformed_authority(self):
+        for authority in ("[::1]suffix:8081", "junk[::1]:8081", "[abc]:8081", "[127.0.0.1]:8081"):
+            origin = f"http://{authority}"
+            # Older urlsplit versions accept malformed bracketed authorities.
+            parsed = SplitResult("http", authority, "", "", "")
+            with self.subTest(authority=authority), patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
+                with patch.object(tg_announce, "urlsplit", return_value=parsed):
+                    with patch.object(tg_announce, "build_opener", side_effect=AssertionError("network")):
+                        self.assertEqual(self.run_main(), (1, "RESULT=NOT_SENT REASON=config_invalid\n",
+                                                         "Missing or invalid ALERT_BOT_API_ORIGIN.\n"))
+
+    def test_check_ignores_invalid_private_config_and_has_no_network(self):
+        Path(".env").write_bytes(b"\xff")
+        with patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": "https://user:secret@bad"}, clear=True):
+            with patch.object(tg_announce, "load_config", side_effect=AssertionError("credentials")):
+                with patch.object(tg_announce, "build_opener", side_effect=AssertionError("network")):
+                    self.assertEqual(self.run_main("check"), (0, "SCHEMA=announcement-v1 VALID=true\n", ""))
+
+    def test_oversized_replies_are_unknown_with_a_bounded_read(self):
+        body = json.dumps(SUCCESS).encode() + b" " * 65536
+        for http_error in (False, True):
+            with self.subTest(http_error=http_error), self.response() as opener:
+                response = Mock()
+                response.read.return_value = body
+                response.status = 200
+                response.closed = False
+                if http_error:
+                    opener.open.side_effect = HTTPError("https://bot.example/secret", 500,
+                                                       TOKEN, {}, response)
+                else:
+                    response.__enter__ = Mock(return_value=response)
+                    response.__exit__ = Mock(return_value=False)
+                    opener.open.return_value = response
+                code, output, errors = self.run_main()
+                self.assertEqual((code, errors), (2, ""))
+                self.assertEqual(output.strip(), "RESULT=UNKNOWN REASON=delivery_unconfirmed")
+                response.read.assert_called_once_with(65537)
+                opener.open.assert_called_once()
+
     def test_invalid_shape_reports_all_errors_before_transport(self):
         self.file.write_text("🚀 v1.2.3\n<pre><code>Plain prose\n• Fixed. More.</code></pre>",
                              encoding="utf-8")
@@ -240,6 +327,7 @@ class Sender(unittest.TestCase):
         self.assertEqual(self.run_main()[0], 1)
 
     def test_api_refusal_does_not_expose_response_or_credentials(self):
+        os.environ["ALERT_BOT_API_ORIGIN"] = "https://bot.example"
         refusal = {"ok": False, "error_code": 403, "description": f"secret {TOKEN}"}
         with self.response(refusal):
             code, output, errors = self.run_main()
@@ -253,6 +341,7 @@ class Sender(unittest.TestCase):
             opener.open.assert_called_once()
 
     def test_ambiguous_results_never_claim_failure_or_retry(self):
+        os.environ["ALERT_BOT_API_ORIGIN"] = "http://telegram-bot-api:8081"
         for reply in ({}, [], {"ok": True}, {"ok": True, "result": {"message_id": True}},
                       {"ok": True, "result": {"message_id": 0}},
                       {"ok": True, "result": {"message_id": "501"}}):
@@ -315,13 +404,62 @@ class Sender(unittest.TestCase):
                                           kwargs={"poll_interval": 0.01}, daemon=True)
                 thread.start()
                 try:
-                    with patch.object(tg_announce, "API_ORIGIN", f"http://127.0.0.1:{server.server_port}"):
+                    with patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": f"http://127.0.0.1:{server.server_port}"}):
                         self.assertEqual(self.run_main()[0], expected)
                     self.assertEqual(len(requests), 1)
                     self.assertEqual(requests[0]["text"], VALID)
                 finally:
                     server.shutdown()
                     thread.join(timeout=2)
+
+    def test_redirects_never_reach_another_origin(self):
+        received = []
+        forwarded = []
+
+        class Target(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_GET(self):
+                forwarded.append(self.path)
+                self.send_error(500)
+
+            do_POST = do_GET
+
+        with ThreadingHTTPServer(("127.0.0.1", 0), Target) as target:
+            for status in (301, 302, 303, 307, 308):
+                class Redirect(BaseHTTPRequestHandler):
+                    def log_message(self, *_args):
+                        pass
+
+                    def do_POST(self):
+                        self.rfile.read(int(self.headers["Content-Length"]))
+                        received.append(self.path)
+                        self.send_response(status)
+                        self.send_header("Location", f"http://127.0.0.1:{target.server_port}{self.path}")
+                        self.send_header("Content-Length", "0")
+                        self.end_headers()
+
+                with self.subTest(status=status), ThreadingHTTPServer(("127.0.0.1", 0), Redirect) as server:
+                    threads = [threading.Thread(target=service.serve_forever,
+                                                kwargs={"poll_interval": 0.01}, daemon=True)
+                               for service in (target, server)]
+                    for thread in threads:
+                        thread.start()
+                    try:
+                        origin = f"http://127.0.0.1:{server.server_port}"
+                        with patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
+                            code, output, errors = self.run_main()
+                        self.assertEqual((code, errors), (2, ""))
+                        self.assertEqual(output.strip(), "RESULT=UNKNOWN REASON=delivery_unconfirmed")
+                        self.assertEqual(received.pop(), f"/bot{TOKEN}/sendMessage")
+                        self.assertEqual(received, [])
+                        self.assertEqual(forwarded, [])
+                    finally:
+                        server.shutdown()
+                        target.shutdown()
+                        for thread in threads:
+                            thread.join(timeout=2)
 
 
 class CommandLine(unittest.TestCase):

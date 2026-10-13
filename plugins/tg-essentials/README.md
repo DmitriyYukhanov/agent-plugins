@@ -45,6 +45,8 @@ One bundled Python script checks `announcement-v1` before sending. The format al
 
 Delivery returns `SENT` (exit 0, message ID), `NOT_SENT` (exit 1, local rejection or confirmed API refusal), or `UNKNOWN` (exit 2, delivery unconfirmed). The script retries nothing and preserves the message file. After `UNKNOWN`, check the destination before a manual retry. The release flow owns rerun identity and prior results; the sender stores no receipts. See the [skill](skills/tg-announce/SKILL.md) for composition, authorization and integration.
 
+The cloud Bot API is the default. Operators can select a trusted HTTP or HTTPS service with `ALERT_BOT_API_ORIGIN` in the same environment or private `.env` configuration. The sender refuses credentials, query strings, fragments and redirects. The selected service receives the token; HTTP requires a trusted internal network. See [private endpoint configuration](skills/tg-announce/SKILL.md#4-send-after-verified-deployment) and [pinned VPS/container installation](skills/tg-announce/SKILL.md#vps-and-containers). Keep the complete installed package outside the application and run its sender directly.
+
 ### Skill: `tg-account`
 
 Talks to Telegram as you, using the session Telegram Desktop already keeps on disk. You don't log in or scan a QR code.
