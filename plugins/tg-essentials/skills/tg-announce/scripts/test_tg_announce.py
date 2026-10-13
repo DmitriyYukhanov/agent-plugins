@@ -148,7 +148,9 @@ class Sender(unittest.TestCase):
         self.file.write_text(VALID.replace("No audience-visible changes.",
                                            "See https://untrusted.example/release."), encoding="utf-8")
         for origin in ("http://telegram-bot-api:8081", "https://bot.example",
-                       "https://bot.example:8443/", "http://[::1]:8081/"):
+                       "https://bot.example:8443/", "http://[::1]:8081/",
+                       "http://localhost", "https://bot-api.internal./",
+                       "https://" + "a" * 63 + ".internal"):
             with self.subTest(origin=origin), patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
                 with self.response() as opener:
                     code, output, errors = self.run_main()
@@ -168,7 +170,10 @@ class Sender(unittest.TestCase):
                    "https://bot.example:65536", "https://bot.example:bad", "https://bot.example:",
                    "https://[broken", " https://bot.example", "https://bot.example\n",
                    "https://bot.\texample", "https://bot.example\\evil", "https://bot.%65xample",
-                   "https://бот.example", "https://bot.example\x7f")
+                   "https://бот.example", "https://bot.example\x7f",
+                   "http://a..b", "http://-", "http://-bad.example", "http://bad-.example",
+                   "http://.internal", "http://" + "a" * 64 + ".internal",
+                   "http://" + ".".join(["a" * 63] * 4))
         for origin in invalid:
             with self.subTest(origin=origin), patch.dict(os.environ, {"ALERT_BOT_API_ORIGIN": origin}):
                 with patch.object(tg_announce, "build_opener", side_effect=AssertionError("network")):

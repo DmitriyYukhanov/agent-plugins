@@ -139,6 +139,12 @@ def validate_origin(origin: str) -> str:
             raise ValueError
         if parsed.netloc.startswith("["):
             IPv6Address(parsed.hostname)
+        else:
+            hostname = parsed.hostname.removesuffix(".")
+            if len(hostname) > 253 or any(
+                    not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", label)
+                    for label in hostname.split(".")):
+                raise ValueError
     except ValueError:
         raise ValueError("Missing or invalid ALERT_BOT_API_ORIGIN.") from None
     return f"{parsed.scheme}://{parsed.netloc}"
