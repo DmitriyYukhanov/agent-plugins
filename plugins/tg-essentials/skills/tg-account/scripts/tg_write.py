@@ -22,7 +22,7 @@ Bot API docs at the time of writing): title 1-255 chars, 1-30 tasks, task 1-100 
 A task starting with "[x] " is sent already ticked; "[ ] " is optional for open ones.
 Members of the chat can tick tasks; they cannot add new ones.
 """
-import argparse, asyncio, json, os, pathlib, secrets, sys, unicodedata
+import argparse, asyncio, hashlib, json, os, pathlib, sys, unicodedata
 from telethon import errors, functions, types, utils
 from tgsess import accounts, client_for, name, open_chat, peer, warm
 
@@ -199,7 +199,9 @@ async def create_topic(c, ent):
     target = await c.get_input_entity(ent)
     if not isinstance(target, types.InputPeerChannel) or target.channel_id != ent.id:
         sys.exit("input peer differs from forum; no request sent")
-    random_id = secrets.randbits(63) or 1
+    # Preserve server deduplication if a crash loses the receipt's directory entry.
+    operation_key = json.dumps([binding, os.path.normcase(str(receipt.resolve()))], ensure_ascii=False, sort_keys=True).encode("utf-8")
+    random_id = (int.from_bytes(hashlib.sha256(operation_key).digest()[:8], "big") & ((1 << 63) - 1)) or 1
     request = functions.messages.CreateForumTopicRequest(peer=target, title=a.title,
                                                         icon_color=0x6FB9F0, random_id=random_id)
     # Exclusive, flushed receipt claims the operation before Telegram can accept it.

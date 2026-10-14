@@ -206,6 +206,26 @@ class CreateTopic(unittest.IsolatedAsyncioTestCase):
             await self.write(client)
         self.assertEqual(client.requests, [])
 
+    async def test_lost_receipt_reuses_request_identity_for_server_deduplication(self):
+        topics = {}
+        async def server(instance, request):
+            instance.requests.append(request)
+            root = topics.setdefault(request.random_id, 37 + len(topics))
+            return SimpleNamespace(updates=[created(root=root)])
+        with patch.object(Client, "__call__", server):
+            first = await self.write()
+            self.operation.unlink()  # Simulate loss of the new directory entry after a power failure.
+            second = await self.write()
+        self.assertEqual(len(topics), 1)
+        self.assertEqual(first.requests[0].random_id, second.requests[0].random_id)
+        self.assertNotIn("topic=38", self.output.getvalue())
+
+    async def test_distinct_operation_paths_get_distinct_request_ids(self):
+        first = await self.write()
+        self.args.operation = str(self.operation.with_name("second.jsonl"))
+        second = await self.write()
+        self.assertNotEqual(first.requests[0].random_id, second.requests[0].random_id)
+
     async def test_receipt_failure_prevents_dispatch_and_claim_race_does_not_overwrite(self):
         client = Client()
         with patch.object(tg_write.os, "fsync", side_effect=OSError("disk full")):
