@@ -3,6 +3,7 @@
 import argparse
 import html
 from http.client import HTTPException
+from ipaddress import IPv6Address
 import json
 import os
 from pathlib import Path
@@ -10,10 +11,12 @@ import re
 import sys
 import unicodedata
 from urllib.error import HTTPError
+from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 API_ORIGIN = "https://api.telegram.org"
+MAX_RESPONSE_BYTES = 65536
 EXAMPLE = "🚀 v1.2.3\n<pre><code>• No audience-visible changes.</code></pre>"
 EMOJI = {"🚀", "✅", "📦", "🛠", "🛠️", "🟢"}
 NUMBER = r"(?:0|[1-9][0-9]*)"
@@ -24,7 +27,7 @@ IDENTIFIER = re.compile(
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?|[0-9a-fA-F]{7,40})"
 )
 ENTITY = re.compile(r"&(?:lt|gt|amp|quot|#[0-9]+|#x[0-9a-fA-F]+);")
-KEYS = ("ALERT_BOT_TOKEN", "ALERT_CHAT_ID", "ALERT_THREAD_ID")
+KEYS = ("ALERT_BOT_TOKEN", "ALERT_CHAT_ID", "ALERT_THREAD_ID", "ALERT_BOT_API_ORIGIN")
 
 
 def validate_announcement(text: str) -> list[str]:
@@ -105,6 +108,7 @@ def load_config() -> dict[str, str]:
                 value = re.split(r"\s+#", value, maxsplit=1)[0].strip()
             config[key] = value
     config.update({key: os.environ[key] for key in KEYS if key in os.environ})
+    config["ALERT_BOT_API_ORIGIN"] = validate_origin(config.get("ALERT_BOT_API_ORIGIN", API_ORIGIN))
     if not re.fullmatch(r"[0-9]+:[A-Za-z0-9_-]+", config.get("ALERT_BOT_TOKEN", "")):
         raise ValueError("Missing or invalid ALERT_BOT_TOKEN.")
     chat = config.get("ALERT_CHAT_ID", "")
@@ -119,14 +123,42 @@ def load_config() -> dict[str, str]:
     return config
 
 
+def validate_origin(origin: str) -> str:
+    """Accept only an operator-supplied HTTP(S) origin, never a request URL."""
+    try:
+        # urlsplit strips some controls, so reject them before parsing.
+        if not origin.isascii() or any(char.isspace() or ord(char) < 32 or ord(char) == 127
+                                       or char in "\\?#" for char in origin):
+            raise ValueError
+        parsed = urlsplit(origin)
+        if (parsed.scheme not in ("http", "https") or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None
+                or parsed.path not in ("", "/")
+                or not re.fullmatch(r"(?:[A-Za-z0-9.-]+|\[[0-9A-Fa-f:.]+\])(?::[0-9]+)?", parsed.netloc)
+                or parsed.port == 0):
+            raise ValueError
+        if parsed.netloc.startswith("["):
+            IPv6Address(parsed.hostname)
+        else:
+            hostname = parsed.hostname.removesuffix(".")
+            if len(hostname) > 253 or any(
+                    not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", label)
+                    for label in hostname.split(".")):
+                raise ValueError
+    except ValueError:
+        raise ValueError("Missing or invalid ALERT_BOT_API_ORIGIN.") from None
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
 
 
-def send_message(token: str, payload: dict) -> tuple[str, str]:
+def send_message(token: str, payload: dict, origin: str = API_ORIGIN) -> tuple[str, str]:
+    origin = validate_origin(origin)
     request = Request(
-        f"{API_ORIGIN}/bot{token}/sendMessage",
+        f"{origin}/bot{token}/sendMessage",
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={"Content-Type": "application/json; charset=utf-8"}, method="POST",
     )
@@ -134,10 +166,12 @@ def send_message(token: str, payload: dict) -> tuple[str, str]:
         try:
             with build_opener(NoRedirect()).open(request, timeout=10) as response:
                 status = response.status
-                body = response.read()
+                body = response.read(MAX_RESPONSE_BYTES + 1)
         except HTTPError as error:
             with error:
-                status, body = error.code, error.read()
+                status, body = error.code, error.read(MAX_RESPONSE_BYTES + 1)
+        if len(body) > MAX_RESPONSE_BYTES:
+            return "UNKNOWN", "REASON=delivery_unconfirmed"
         reply = json.loads(body)
     except (OSError, HTTPException, ValueError, RecursionError):
         return "UNKNOWN", "REASON=delivery_unconfirmed"
@@ -194,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
                "link_preview_options": {"is_disabled": True}}
     if "ALERT_THREAD_ID" in config:
         payload["message_thread_id"] = int(config["ALERT_THREAD_ID"])
-    return result(*send_message(config["ALERT_BOT_TOKEN"], payload))
+    return result(*send_message(config["ALERT_BOT_TOKEN"], payload, config["ALERT_BOT_API_ORIGIN"]))
 
 
 if __name__ == "__main__":
