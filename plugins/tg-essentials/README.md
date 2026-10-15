@@ -52,7 +52,7 @@ The cloud Bot API is the default. Operators can select a trusted HTTP or HTTPS s
 Talks to Telegram as you, using the session Telegram Desktop already keeps on disk. You don't log in or scan a QR code.
 
 - Find chats and export their history into one text file per day
-- List forum topics by name and ID, and send posts or checklists into a selected topic
+- List and create forum topics, and send posts or checklists into a selected topic
 - Include local transcripts of voice messages and video notes automatically
 - Create a group, send, edit and pin posts, and set the group photo
 - Post a native checklist that members can tick (sending one needs Telegram Premium)
@@ -62,6 +62,8 @@ Every write waits for your yes first. Requires Telegram Desktop and Python 3.12.
 Normal exports include voice messages and video notes on their original message lines. On the first note without a cached transcript, the exporter installs any missing transcription dependencies and downloads Whisper `small` (about 500 MB). One local CPU process handles recognition without an API key or agent tokens. Successful transcripts are cached inside the export's `.transcripts` folder; temporary media files are deleted after processing. Keep that folder private along with the exported chat. Failures stay visible and retry on the next export. Use `--no-transcribe` only when you want to skip speech.
 
 For forum groups, run `tg_find.py --topics CHAT [--account ID]` to see topic names and root IDs. Pass the selected ID to `tg_write.py send` or `todo` with `--topic ID`. Include the topic in the write approval. Omitting the flag keeps the usual routing; topic `1` is General. See the [skill commands](skills/tg-account/SKILL.md#use) for full examples.
+
+To create a topic in an existing forum, use `tg_write.py topic CHAT "Project planning" --account ID --operation FILE` after approving the account, forum and exact title. `CHAT` must be the forum's numeric `-100...` ID. Keep the receipt file outside Git and reuse it for the same operation: confirmed reruns return the saved root ID, and unconfirmed attempts block further creation. After a lost response or interruption, inspect the forum before considering a new operation. See [creating a forum topic](skills/tg-account/SKILL.md#creating-a-forum-topic) for limits, permissions and recovery.
 
 ## Usage
 

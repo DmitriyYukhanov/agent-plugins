@@ -5,10 +5,15 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [2.4.0] - 2026-10-13
+## [2.5.0] - 2026-10-15
 
 ### Added
 - Send announcements through a trusted, privately configured HTTP or HTTPS Bot API service.
+
+## [2.4.0] - 2026-10-15
+
+### Added
+- Create topics in existing Telegram forums with permission checks and protection against duplicate creation after an interrupted attempt.
 
 ## [2.3.1] - 2026-10-12
 
