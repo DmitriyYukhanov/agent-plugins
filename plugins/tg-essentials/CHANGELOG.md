@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.6.0] - 2026-10-21
+
+### Added
+- Schedule messages from a user account with explicit send times and protection against duplicate sends after interruptions.
+
 ## [2.5.0] - 2026-10-15
 
 ### Added

@@ -7,6 +7,7 @@ Usage:
   tg_write.py group TITLE MEMBER [MEMBER ...]   create a basic group, print its id
   tg_write.py topic CHAT TITLE --account ID --operation FILE  create a forum topic, print root ID
   tg_write.py send CHAT FILE [--pin] [--topic ID]  send FILE (UTF-8, Markdown), print message id
+  tg_write.py send CHAT FILE --account ID --schedule-at ISO --operation FILE  queue a message
   tg_write.py edit CHAT MSG_ID FILE             replace the text of your own message
   tg_write.py todo CHAT FILE [--pin] [--topic ID]  send a native checklist (needs Telegram Premium)
   tg_write.py photo CHAT IMAGE                  set the group or channel photo
@@ -23,7 +24,9 @@ A task starting with "[x] " is sent already ticked; "[ ] " is optional for open 
 Members of the chat can tick tasks; they cannot add new ones.
 """
 import argparse, asyncio, hashlib, json, os, pathlib, sys, unicodedata
+from datetime import datetime, timedelta, timezone
 from telethon import errors, functions, types, utils
+from telethon.extensions import markdown
 from tgsess import accounts, client_for, name, open_chat, peer, warm
 
 
@@ -61,6 +64,17 @@ def topic_title(value):
     if value.strip() and len(value.encode("utf-8")) <= 128 and not any(unicodedata.category(c) == "Cc" for c in value):
         return value
     raise argparse.ArgumentTypeError("topic title must be nonblank, at most 128 UTF-8 bytes, without control characters")
+
+
+def schedule_time(value: str) -> datetime:
+    """Require an unambiguous ISO timestamp with a UTC offset."""
+    try:
+        date = datetime.fromisoformat(value)
+        if date.tzinfo is not None and date.utcoffset() is not None:
+            return date.astimezone(timezone.utc).replace(microsecond=0)
+    except ValueError:
+        pass
+    raise argparse.ArgumentTypeError("schedule time must be ISO 8601 with a UTC offset")
 
 
 def parse_todo(text):
@@ -118,11 +132,92 @@ async def in_chat(act):
 
 
 async def send(c, ent):
+    if getattr(a, "schedule_at", None) is not None:
+        await scheduled_send(c, ent)
+        return
     m = await c.send_message(ent, read(a.file), link_preview=False, reply_to=None if a.topic == 1 else a.topic)
     print(f"message={m.id}", flush=True)  # before the pin: a failed pin must not invite a duplicate send
     if a.pin:
         await c.pin_message(ent, m, notify=False)
         print("pinned")
+
+
+async def scheduled_send(c, ent) -> None:
+    """Queue one audible message, preserving the operation across uncertain retries."""
+    if a.pin:
+        sys.exit("scheduled messages cannot be pinned before delivery")
+    me = await c.get_me()
+    if me is None or me.id != int(a.account) or me.bot:
+        sys.exit("scheduling requires the explicitly selected user account")
+    text = read(a.file)
+    message, entities = markdown.parse(text)
+    if not message.strip():
+        sys.exit("scheduled message must contain text")
+    binding = {"account": me.id, "chat": utils.get_peer_id(ent), "topic": a.topic,
+               "schedule_at": int(a.schedule_at.timestamp()),
+               "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()}
+    receipt = pathlib.Path(a.operation).expanduser()
+    unknown = f"UNKNOWN: inspect scheduled queue and chat history; keep {receipt} and do not create another operation"
+    try:
+        with receipt.open(encoding="utf-8") as f:
+            records = [json.loads(line) for line in f]
+    except FileNotFoundError:
+        records = None
+    except (OSError, ValueError):
+        print(f"cannot read operation receipt; {unknown}", file=sys.stderr)
+        raise SystemExit(2)
+    if records is not None:
+        if not records or not isinstance(records[0], dict) or any(records[0].get(k) != v for k, v in binding.items()):
+            sys.exit("operation receipt does not match account, target, text and time; no request sent")
+        if len(records) == 2 and isinstance(records[1], dict) and type(records[1].get("scheduled_message")) is int and 0 < records[1]["scheduled_message"] <= 2147483647:
+            print(f"scheduled_message={records[1]['scheduled_message']} schedule_at={a.schedule_at.isoformat()} reused (acceptance receipt, not delivery)", flush=True)
+            return
+        print(unknown, file=sys.stderr)
+        raise SystemExit(2)
+    target = await c.get_input_entity(ent)
+    if utils.get_peer_id(target, add_mark=True) != binding["chat"]:
+        sys.exit("input peer differs from target; no request sent")
+    if a.schedule_at < datetime.now(timezone.utc) + timedelta(seconds=30):
+        sys.exit("schedule time must be at least 30 seconds in the future; no request sent")
+    operation_key = json.dumps([binding, os.path.normcase(str(receipt.resolve()))], sort_keys=True).encode("utf-8")
+    random_id = (int.from_bytes(hashlib.sha256(operation_key).digest()[:8], "big") & ((1 << 63) - 1)) or 1
+    request = functions.messages.SendMessageRequest(
+        peer=target, message=message, entities=entities, no_webpage=True, silent=False,
+        reply_to=types.InputReplyToMessage(reply_to_msg_id=a.topic) if a.topic not in (None, 1) else None,
+        schedule_date=a.schedule_at, random_id=random_id)
+    try:
+        with receipt.open("x", encoding="utf-8") as f:
+            f.write(json.dumps({**binding, "random_id": random_id}) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+    except OSError:
+        sys.exit("cannot claim operation receipt; no request sent (reuse the existing receipt)")
+    try:
+        # Stop retries before Telegram's ten-second immediate-send window.
+        remaining = (a.schedule_at - datetime.now(timezone.utc)).total_seconds() - 20
+        if remaining <= 0:
+            raise asyncio.TimeoutError()
+        c.flood_sleep_threshold = 0
+        result = await asyncio.wait_for(c(request), timeout=remaining)
+    except (errors.RPCError, OSError, asyncio.TimeoutError) as ex:
+        print(f"Telegram: {type(ex).__name__}; {unknown}", file=sys.stderr)
+        raise SystemExit(2)
+    queued = [u.message for u in getattr(result, "updates", []) if isinstance(u, types.UpdateNewScheduledMessage)
+              and isinstance(u.message, types.Message) and u.message.message == message
+              and utils.get_peer_id(u.message.peer_id) == binding["chat"]
+              and int(u.message.date.timestamp()) == binding["schedule_at"]]
+    if len(queued) != 1:
+        print(unknown, file=sys.stderr)
+        raise SystemExit(2)
+    message_id = queued[0].id
+    print(f"scheduled_message={message_id} schedule_at={a.schedule_at.isoformat()} (queued, not delivered)", flush=True)
+    try:
+        with receipt.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"scheduled_message": message_id}) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+    except OSError:
+        sys.exit("message queued but receipt update failed; keep the printed scheduled ID and never repeat the send")
 
 
 async def edit(c, ent):
@@ -261,6 +356,8 @@ if __name__ == "__main__":
     s.add_argument("chat")
     s.add_argument("file")
     s.add_argument("--pin", action="store_true")
+    s.add_argument("--schedule-at", type=schedule_time, metavar="ISO", help="server send time, ISO 8601 with UTC offset, at least 30 seconds ahead")
+    s.add_argument("--operation", metavar="FILE", help="private receipt required for scheduled sends; reuse on reruns")
     e = sub.add_parser("edit")
     e.add_argument("chat")
     e.add_argument("msg_id", type=int)
@@ -277,6 +374,10 @@ if __name__ == "__main__":
     for x in (g, s, e, t, ph):
         x.add_argument("--account")
     a = p.parse_args()
+
+    if a.cmd == "send" and (a.schedule_at is not None or a.operation is not None):
+        if a.schedule_at is None or not a.operation or not a.account or a.pin:
+            p.error("scheduled sends require --schedule-at, --operation and --account, without --pin")
 
     if a.account is None:
         ids = [x.UserId for x in accounts()]
