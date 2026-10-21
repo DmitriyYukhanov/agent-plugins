@@ -65,6 +65,10 @@ class ScheduledSend(unittest.IsolatedAsyncioTestCase):
         with BinaryReader(bytes(request)) as reader:
             wire = reader.tgread_object()
         self.assertIsNotNone(wire.schedule_date)
+        wire_time = wire.schedule_date
+        if wire_time.tzinfo is None:
+            wire_time = wire_time.replace(tzinfo=dt.timezone.utc)
+        self.assertEqual(int(wire_time.timestamp()), int(self.args.schedule_at.timestamp()))
         self.assertFalse(wire.silent)
         self.assertEqual(wire.reply_to.reply_to_msg_id, 37)
         self.assertEqual(wire.message, "Scheduled report")
