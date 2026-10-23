@@ -1,0 +1,20 @@
+{
+  "repository": "owner/site-repository",
+  "report_issue": 1,
+  "allow_public_reports": false,
+  "publisher_login": "github-actions[bot]",
+  "sites": [
+    {
+      "property": "sc-domain:codestage.net",
+      "page_prefixes": ["https://codestage.net/", "https://docs.codestage.net/"],
+      "log": "docs/seo/log.md",
+      "measurements": []
+    },
+    {
+      "property": "sc-domain:yarrtifacts.com",
+      "page_prefixes": ["https://yarrtifacts.com/"],
+      "log": "docs/seo/yarrtifacts-log.md",
+      "measurements": []
+    }
+  ]
+}
