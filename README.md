@@ -78,6 +78,7 @@ refresh commands, and a possible later marketplace ID change.
 | [issue-to-pr](#issue-to-pr) | Take GitHub issues to reviewed pull requests | Claude Code or Codex |
 | [learning-guide](#learning-guide) | Build interactive HTML learning guides | Shared skills; Node.js required |
 | [python-dev](#python-dev) | Develop and test Python projects | Shared skills |
+| [seo-pulse](#seo-pulse) | Review Search Console evidence and maintain weekly signal issues | Shared skill; Python and GSC access required |
 | [tg-essentials](#tg-essentials) | Manage Telegram chats, alerts, and announcements | Shared skills; account and dependencies required |
 | [tg-voice](#tg-voice) | Transcribe Telegram voice notes through a download hook | Claude Code adapter |
 | [typescript-dev](#typescript-dev) | Develop and test TypeScript projects | Shared skills |
@@ -139,6 +140,14 @@ Use native skills for architecture, implementation, pytest guidance, and review.
 Read the review instructions directly when the host cannot load the optional
 Claude reviewer adapter.
 [Documentation](./plugins/python-dev/README.md).
+
+### seo-pulse
+
+Run an SEO cycle from project configuration, or maintain a weekly report and
+deduplicated signal issues without editing sites. Includes a GSC MCP adapter
+and an opt-in service-account CI template.
+Install with `/plugin install seo-pulse@dmitriy-claude-plugins`.
+[Documentation](./plugins/seo-pulse/README.md).
 
 ### tg-essentials
 

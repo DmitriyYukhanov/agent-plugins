@@ -1,0 +1,28 @@
+name: SEO pulse tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/seo-pulse/**'
+      - '.github/workflows/seo-pulse-tests.yml'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s plugins/seo-pulse/tests
+      - run: python scripts/tests/test_catalog.py
