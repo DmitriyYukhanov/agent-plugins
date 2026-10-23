@@ -328,6 +328,18 @@ class WeeklyTests(unittest.TestCase):
             self.w.publish(plan, api)
         self.assertEqual(api.writes, [])
 
+    def test_held_page_reports_wait_once_even_with_thousands_of_queries(self):
+        self.site["measurements"] = [{"page": "https://example.com/a", "changed_on": "2026-10-15",
+                                      "baseline_start": "2026-09-17", "baseline_end": "2026-10-14"}]
+        rows = [{"keys": [f"query-{i}", "https://example.com/a"], "impressions": 1,
+                 "clicks": 0, "ctr": 0, "position": 3} for i in range(2000)]
+        api = self.api(rows=rows)
+        plan = self.w.plan_run(self.config, date(2026, 10, 23), api)
+        self.assertEqual(len(plan), 1)
+        self.assertEqual(plan[0]["method"], "PATCH")
+        self.assertEqual(plan[0]["data"]["body"].count("is being measured."), 1)
+        self.assertEqual(api.writes, [])
+
 
 if __name__ == "__main__":
     unittest.main()

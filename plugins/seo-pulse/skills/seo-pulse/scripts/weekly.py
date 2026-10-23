@@ -305,7 +305,9 @@ def plan_run(config: dict, today: date, api: API) -> list[dict]:
             if old and old["state"] == "closed":
                 continue
             if on_hold(site, url, today):
-                lines.append(f"- Wait: {safe_text(url)} is being measured.")
+                note = f"- Wait: {safe_text(url)} is being measured."
+                if note not in lines:
+                    lines.append(note)
                 continue
             if kind and not old:
                 dates = api.gsc(site, start, end, ("date", "page"), (query, url))
