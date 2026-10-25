@@ -39,6 +39,14 @@ schedule. Interactive assessment needs no GitHub report issue or label.
    positions 5 to 20 with enough evidence, new demand, or a sustained movement.
    Inspect indexing/sitemaps only through read tools when relevant. A canonical
    alternate URL is not an error when its intended canonical is indexed.
+   Before recommending a change, read the query and current destination page.
+   Follow redirects and inspect the canonical; retain the original GSC URL for
+   exact checks. Report the query, current URL, page role (such as sales landing
+   or documentation), and `match`, `mismatch` or `uncertain`, with a short reason
+   grounded in the page content. Wait if intent or the destination is unclear.
+   Historical metrics for a redirected URL do not establish a defect on the final
+   page. Read its own current GSC evidence before recommending a change there.
+   Keep recommendations within verified owned scope and respect measurement holds.
 4. Wait when the page is still being measured, the observation covers less than
    two weeks, or it has fewer than about 100 impressions. At most one change per
    site enters implementation. Missing or anonymized rows are unknown, never a
