@@ -139,6 +139,8 @@ class WeeklyTests(unittest.TestCase):
 
             def gsc(self, site, start, end, dimensions=(), exact=None):
                 if dimensions == ("date", "page"):
+                    if exact is None:
+                        return []
                     return [{"keys": [start, exact[1]], "impressions": 200,
                              "clicks": 1, "ctr": .005, "position": 3}]
                 if dimensions:
@@ -311,7 +313,7 @@ class WeeklyTests(unittest.TestCase):
 
         def recent(site, start, end, dimensions=(), exact=None):
             result = real(site, start, end, dimensions, exact)
-            if dimensions == ("date", "page"):
+            if dimensions == ("date", "page") and exact is not None:
                 result[0]["keys"][0] = "2026-10-17"
             return result
 
@@ -495,6 +497,139 @@ class WeeklyTests(unittest.TestCase):
         self.assertEqual(payloads[0]["dimensions"], ["date", "page"])
         self.assertEqual(payloads[0]["dimensionFilterGroups"][0]["filters"][-1],
                          {"dimension": "page", "operator": "equals", "expression": "https://example.com/a"})
+
+
+    def decline_api(self, clicks=(40, 30, 20), impressions=(200, 200, 200), overrides=None,
+                    page="https://example.com/a"):
+        api = self.api(rows=[])
+        original = api.gsc
+        api.decline_reads = []
+        periods = [("2026-10-03", "2026-10-09"), ("2026-10-10", "2026-10-16"),
+                   ("2026-10-17", "2026-10-23")]
+
+        def weekly(site, start, end, dimensions=(), exact=None):
+            if dimensions == ("date", "page") and exact is None:
+                api.decline_reads.append((start, end))
+                index = periods.index((start, end))
+                if overrides and index in overrides:
+                    return deepcopy(overrides[index])
+                return [{"keys": [end, page], "clicks": clicks[index],
+                         "impressions": impressions[index], "ctr": clicks[index] / impressions[index],
+                         "position": 4}]
+            return original(site, start, end, dimensions, exact)
+
+        api.gsc = weekly
+        return api
+
+    def test_sustained_decline_reports_three_equal_dated_page_windows_only(self):
+        api = self.decline_api()
+        before = deepcopy(self.config)
+        plan = self.w.plan_run(self.config, date(2026, 10, 26), api)
+        body = plan[-1]["data"]["body"]
+        self.assertIn("Possible sustained decline: https://example.com/a", body)
+        self.assertIn("| 2026-10-03 to 2026-10-09 | 40 | 200 | 20.00% | 4.00 |", body)
+        self.assertIn("| 2026-10-10 to 2026-10-16 | 30 | 200 | 15.00% | 4.00 |", body)
+        self.assertIn("| 2026-10-17 to 2026-10-23 | 20 | 200 | 10.00% | 4.00 |", body)
+        self.assertIn("known migration", body)
+        self.assertEqual(api.decline_reads, [("2026-10-03", "2026-10-09"),
+                                             ("2026-10-10", "2026-10-16"),
+                                             ("2026-10-17", "2026-10-23")])
+        self.assertEqual([op["method"] for op in plan], ["PATCH"])
+        self.assertEqual(self.config, before)
+        self.assertEqual(api.writes, [])
+
+    def test_one_week_dip_flat_zero_and_small_declines_do_not_flag(self):
+        for clicks in ((40, 10, 30), (40, 30, 30), (40, 0, 0), (40, 31, 20), (19, 14, 10)):
+            with self.subTest(clicks=clicks):
+                api = self.decline_api(clicks=clicks)
+                body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+                self.assertNotIn("Possible sustained decline:", body)
+                self.assertIn("No supported sustained-decline finding", body)
+
+    def test_decline_sample_floor_is_inclusive_and_each_week_must_qualify(self):
+        for impressions, flagged in (((100, 100, 100), True), ((99, 100, 100), False),
+                                     ((100, 99, 100), False), ((100, 100, 99), False)):
+            with self.subTest(impressions=impressions):
+                api = self.decline_api(clicks=(20, 15, 10), impressions=impressions)
+                body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+                self.assertEqual("Possible sustained decline:" in body, flagged)
+                if not flagged:
+                    self.assertIn("Wait:", body)
+
+    def test_missing_week_or_final_endpoint_stays_unknown(self):
+        for overrides in ({1: []}, {2: [{"keys": ["2026-10-22", "https://example.com/a"],
+                                         "clicks": 20, "impressions": 200, "ctr": .1, "position": 4}]}):
+            with self.subTest(overrides=overrides):
+                api = self.decline_api(overrides=overrides)
+                body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+                self.assertNotIn("Possible sustained decline:", body)
+                self.assertIn("missing, partial, low-volume or held", body)
+                self.assertIn("unknown", body)
+
+    def test_explicit_final_zero_can_complete_a_decline_but_absence_cannot(self):
+        api = self.decline_api(clicks=(40, 30, 0))
+        body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+        self.assertIn("Possible sustained decline:", body)
+        self.assertIn("| 2026-10-17 to 2026-10-23 | 0 | 200 | 0.00% | 4.00 |", body)
+
+    def test_decline_respects_measurement_hold_and_excludes_fragments(self):
+        self.site["measurements"] = [{"page": "https://example.com/a", "changed_on": "2026-10-15",
+                                      "baseline_start": "2026-09-17", "baseline_end": "2026-10-14"}]
+        for page in ("https://example.com/a", "https://example.com/a#section"):
+            with self.subTest(page=page):
+                if "#" in page:
+                    self.site["measurements"] = []
+                api = self.decline_api(page=page)
+                body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+                self.assertNotIn("Possible sustained decline:", body)
+                self.assertNotIn("#section", body)
+                self.assertIn("Fragment rows are excluded", body)
+
+    def test_decline_sums_daily_page_rows_and_escapes_raw_url(self):
+        page = "https://example.com/a?tag=@team|<script>"
+        overrides = {}
+        for index, (first, last, clicks) in enumerate((("2026-10-03", "2026-10-09", 40),
+                                                     ("2026-10-10", "2026-10-16", 30),
+                                                     ("2026-10-17", "2026-10-23", 20))):
+            overrides[index] = [{"keys": [day, page], "clicks": clicks / 2,
+                                 "impressions": 100, "ctr": clicks / 200, "position": 4}
+                                for day in (first, last)]
+        api = self.decline_api(overrides=overrides)
+        body = self.w.plan_run(self.config, date(2026, 10, 26), api)[-1]["data"]["body"]
+        self.assertIn("Possible sustained decline:", body)
+        self.assertIn("| 2026-10-03 to 2026-10-09 | 40 | 200 | 20.00% | 4.00 |", body)
+        self.assertNotIn("@team", body)
+        self.assertNotIn("<script>", body)
+
+    def test_failed_decline_read_stops_before_publication_and_rerun_is_noop(self):
+        api = self.decline_api()
+        original = api.gsc
+
+        def failed(site, start, end, dimensions=(), exact=None):
+            if start == "2026-10-10" and exact is None:
+                raise RuntimeError("weekly collection failed")
+            return original(site, start, end, dimensions, exact)
+
+        api.gsc = failed
+        with self.assertRaises(RuntimeError):
+            self.w.plan_run(self.config, date(2026, 10, 26), api)
+        self.assertEqual(api.writes, [])
+        api.gsc = original
+        self.w.publish(self.w.plan_run(self.config, date(2026, 10, 26), api), api)
+        self.assertEqual(self.w.plan_run(self.config, date(2026, 10, 26), api), [])
+        self.assertEqual(api.issues, [])
+
+    def test_decline_reads_final_page_totals_without_query_filters(self):
+        api = self.w.API("fake", "fake")
+        payloads = []
+        api.request = lambda url, token, method, data=None: payloads.append(data) or {}
+        self.w.decline_report(self.site, date(2026, 10, 26), api)
+        self.assertEqual(len(payloads), 3)
+        for payload in payloads:
+            self.assertEqual(payload["dataState"], "final")
+            self.assertEqual(payload["dimensions"], ["date", "page"])
+            self.assertFalse(any(f["dimension"] == "query" for f in
+                                 payload["dimensionFilterGroups"][0]["filters"]))
 
 
 if __name__ == "__main__":
