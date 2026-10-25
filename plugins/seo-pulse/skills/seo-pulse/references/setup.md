@@ -77,9 +77,30 @@ The runner holds that exact page through October 29 and reports checks on Octobe
 15 and 29. Fragment variants of the page share that hold; exact GSC queries retain
 their original URLs. Do not sum fragment rows to reconstruct document totals.
 Remove a completed measurement through the normal reviewed config flow.
-The fixed baseline survives each weekly run. Weekly totals separately compare the
-last finalized 28 days with the preceding 28 days, using a three-day lag. Empty
-responses are unknown. GSC's query rows can omit anonymized or low-volume queries.
+Due checkpoints show finalized date/page rows for the 14 or 28 days after the
+change day. The report keeps the configured baseline dates and shows all four
+metrics for each window, plus clicks and impressions per day. Compare those daily
+counts when window lengths differ, such as a 28-day baseline at the two-week check.
+CTR and position already describe rates and averages. Counts alone do not establish
+that the change caused the observed result.
+
+The baseline table is a fresh reconstruction from GSC for the fixed dates. Keep
+the original logged baseline separately; a new read cannot recreate an ambiguous
+historical snapshot. Invalid baseline dates still stop the run rather than moving
+the dates or overwriting the log.
+
+A checkpoint has enough evidence to review when both windows have at least 100
+impressions and a returned finalized row on each window's last day. A missing
+endpoint leaves finalized coverage unconfirmed, even after the usual reporting
+lag. The report keeps measuring and warns that the displayed totals may be partial.
+This conservative check also waits when a sparse page has no row on that last day;
+it does not turn an omitted row into a measured zero. An explicit zero row remains
+zero. Missing window data is unavailable, and a collection failure stops the plan
+before publication. The runner never completes or removes a measurement itself.
+
+Weekly totals separately compare the last finalized 28 days with the preceding
+28 days, using a three-day lag. Empty responses are unknown. GSC's query rows can
+omit anonymized or low-volume queries.
 Only a sufficiently large successful exact query/page recheck can close a signal.
 The 100-impression, 2% CTR and position 5/20 cutoffs are screening heuristics;
 reviewers still decide whether an issue deserves a change.
