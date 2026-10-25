@@ -155,6 +155,13 @@ def metrics(rows: list[dict]) -> str:
     return f"{clicks:g} | {impressions:g} | {clicks / impressions:.2%} | {position:.2f}" if impressions else "0 | 0 | unknown | unknown"
 
 
+def measurement_row(label: str, first: str, last: str, rows: list[dict]) -> str:
+    days = (date.fromisoformat(last) - date.fromisoformat(first)).days + 1
+    daily = (f"{sum(row['clicks'] for row in rows) / days:g} | "
+             f"{sum(row['impressions'] for row in rows) / days:g}" if rows else "unknown | unknown")
+    return f"| {label} {first} to {last} ({days} days) | {metrics(rows)} | {daily} |"
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         raise ValueError("Authenticated API redirect refused")
@@ -340,14 +347,41 @@ def plan_run(config: dict, today: date, api: API) -> list[dict]:
                 lines.append(f"- {kind}: {safe_text(query)}; {safe_text(url)} ({row['impressions']:g} impressions).")
         for measurement in site.get("measurements", []):
             changed = date.fromisoformat(measurement["changed_on"])
-            lines += ["", f"Measurement: {safe_text(measurement['page'])}"]
+            first, last = measurement["baseline_start"], measurement["baseline_end"]
+            baseline = api.gsc(site, first, last, ("date", "page"), (None, measurement["page"]))
+            lines += ["", f"Measurement: {safe_text(measurement['page'])}",
+                      "Keep the original logged baseline in " + safe_text(site["log"])
+                      + "; this API read reconstructs its fixed date window.", "",
+                      "| Window | Clicks | Impressions | CTR | Position | Clicks/day | Impressions/day |",
+                      "|---|---|---|---|---|---|---|",
+                      measurement_row("Reconstructed fixed baseline", first, last, baseline)]
+            notes = []
             for days in (14, 28):
                 check = changed + timedelta(days=days)
-                lines.append(f"- +{days // 7} weeks: {check.isoformat()} ({'due' if today >= check else 'pending'}).")
-            baseline = api.gsc(site, measurement["baseline_start"], measurement["baseline_end"],
-                               exact=(None, measurement["page"]))
-            lines.append("Fixed pre-change baseline: " + measurement["baseline_start"] + " to "
-                         + measurement["baseline_end"] + ". Metrics: " + metrics(baseline) + ".")
+                label = f"+{days // 7} weeks"
+                if today < check:
+                    notes.append(f"- {label}: {check.isoformat()} (pending).")
+                    continue
+                post_start, post_end = (changed + timedelta(days=1)).isoformat(), check.isoformat()
+                observed = api.gsc(site, post_start, post_end, ("date", "page"),
+                                   (None, measurement["page"]))
+                lines.append(measurement_row(label, post_start, post_end, observed))
+                if not baseline or not observed:
+                    decision = "Unavailable: missing baseline or post-change rows; absent data is unknown."
+                else:
+                    baseline_end = max(row["keys"][0] for row in baseline)
+                    observed_end = max(row["keys"][0] for row in observed)
+                    if baseline_end != last or observed_end != post_end:
+                        decision = ("Keep measuring: finalized coverage is unconfirmed; latest returned dates "
+                                    f"are {baseline_end} (baseline) and {observed_end} (post-change). "
+                                    "Totals may cover only part of the requested windows.")
+                    elif min(sum(row["impressions"] for row in baseline),
+                             sum(row["impressions"] for row in observed)) < 100:
+                        decision = "Keep measuring: fewer than 100 impressions in one or both windows."
+                    else:
+                        decision = "Enough evidence to review; compare daily counts when durations differ."
+                notes.append(f"- {label}: {decision}")
+            lines += [""] + notes + ["Changes shown here are observations and do not establish causation."]
     body = replace_block(report["body"], "\n".join(lines))
     if body != report["body"]:
         operations.append({"method": "PATCH", "path": report_path, "data": {"body": body}, "before": report})
