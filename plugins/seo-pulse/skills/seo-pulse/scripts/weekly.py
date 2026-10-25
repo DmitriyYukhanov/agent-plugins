@@ -162,6 +162,50 @@ def measurement_row(label: str, first: str, last: str, rows: list[dict]) -> str:
     return f"| {label} {first} to {last} ({days} days) | {metrics(rows)} | {daily} |"
 
 
+def decline_report(site: dict, today: date, api) -> list[str]:
+    end = date.fromisoformat(windows(today)[1])
+    periods = []
+    for offset in (14, 7, 0):
+        last = end - timedelta(days=offset)
+        first = last - timedelta(days=6)
+        pages = {}
+        for row in api.gsc(site, first.isoformat(), last.isoformat(), ("date", "page")):
+            page = row["keys"][1]
+            if not urlsplit(page).fragment:
+                pages.setdefault(page, []).append(row)
+        periods.append((first.isoformat(), last.isoformat(), pages))
+    lines = ["", "#### Sustained decline screen", "",
+             "Three equal seven-day windows; each needs 100 impressions and the first needs 20 clicks. "
+             "Flag two strict weekly click falls of at least 25%.",
+             "Fragment rows are excluded; absent page/date rows are unknown.",
+             "Migration and redirect history is not collected. Check " + safe_text(site["log"])
+             + " and current destinations before acting; wait on a known migration."]
+    waiting, found = 0, False
+    for page in sorted({page for _, _, pages in periods for page in pages}):
+        samples = [pages.get(page, []) for _, _, pages in periods]
+        if on_hold(site, page, today) or any(
+                not rows or max(row["keys"][0] for row in rows) != last
+                or sum(row["impressions"] for row in rows) < 100
+                for (_, last, _), rows in zip(periods, samples)):
+            waiting += 1
+            continue
+        clicks = [sum(row["clicks"] for row in rows) for rows in samples]
+        if clicks[0] < 20:
+            waiting += 1
+            continue
+        if all(later < earlier and later <= earlier * .75 for earlier, later in zip(clicks, clicks[1:])):
+            found = True
+            lines += ["", "Possible sustained decline: " + safe_text(page), "",
+                      "| Window | Clicks | Impressions | CTR | Position |", "|---|---|---|---|---|"]
+            for (first, last, _), rows in zip(periods, samples):
+                lines.append(f"| {first} to {last} | {metrics(rows)} |")
+    if not found:
+        lines += ["", "No supported sustained-decline finding; this is not proof that all pages are stable."]
+    if waiting:
+        lines.append(f"Wait: {waiting} page(s) have missing, partial, low-volume or held evidence.")
+    return lines
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         raise ValueError("Authenticated API redirect refused")
@@ -345,6 +389,7 @@ def plan_run(config: dict, today: date, api: API) -> list[dict]:
                                             f"<!-- seo-pulse:signal:{identity} -->\n" + block(content)}})
             if kind:
                 lines.append(f"- {kind}: {safe_text(query)}; {safe_text(url)} ({row['impressions']:g} impressions).")
+        lines += decline_report(site, today, api)
         for measurement in site.get("measurements", []):
             changed = date.fromisoformat(measurement["changed_on"])
             first, last = measurement["baseline_start"], measurement["baseline_end"]

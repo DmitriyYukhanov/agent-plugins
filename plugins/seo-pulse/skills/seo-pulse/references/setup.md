@@ -105,6 +105,33 @@ Only a sufficiently large successful exact query/page recheck can close a signal
 The 100-impression, 2% CTR and position 5/20 cutoffs are screening heuristics;
 reviewers still decide whether an issue deserves a change.
 
+### Sustained decline screen
+
+The weekly report also checks three contiguous seven-day windows ending at the
+usual three-day reporting lag. It reads finalized date/page rows for each window
+and keeps each raw page URL separate. It excludes fragment rows from this screen
+instead of adding document sections to page totals; query rows are not a source
+for these counts.
+
+A page qualifies when each week has at least 100 impressions, its first week has
+at least 20 clicks, and both later weeks have strictly fewer clicks with a drop of
+at least 25% each. For example, 40, 30 and 20 clicks qualify; 40, 10 and 30 do not.
+These fixed thresholds are a conservative screening rule, not an anomaly model.
+The report shows the three date ranges with clicks, impressions, CTR and position.
+
+Each week must include a returned finalized row on its last day. Missing rows,
+unconfirmed endpoints, small samples and active measurement holds lead to a wait
+or coverage note. The same sparse-endpoint limit as measurement checks applies.
+An explicit zero can complete a fall; an absent row cannot. A second flat zero
+week does not count as another fall. Collection failures stop publication, and a
+same-date rerun keeps the existing report unchanged when the evidence is unchanged.
+
+The runner does not collect migration or redirect history. Before acting on a
+possible decline, check the existing SEO log and current destinations. Wait when
+a known migration makes the windows incomparable. A decline note is a reason to
+review the evidence; it neither diagnoses a cause nor creates a separate signal
+issue or changes the site.
+
 ## Local OAuth and MCP
 
 Install Python 3.11+ and `uv`/`uvx`. Enable the
