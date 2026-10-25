@@ -18,6 +18,11 @@ Read the [skill](skills/seo-pulse/SKILL.md) and
 opt-in CI template from the skill's assets. Python 3.11+ is required for weekly
 runs; `uvx` runs the pinned upstream MCP adapter for interactive access.
 
+The first read-only assessment can verify project scope and existing experiments
+before installing config or creating a report issue. Product workspaces use their
+owned landing and documentation pages; marketplace rankings and sales need
+separate analytics. Follow each page's source repository when proposing a change.
+
 Weekly reports use deterministic analytics and issue publishing without a paid
 model call. Real GSC grants, host installation and first unattended delivery
 require separate verification; local tests use a fake API transport.

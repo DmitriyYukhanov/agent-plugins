@@ -5,11 +5,27 @@ description: Use when asked to run an SEO pulse, review Search Console positions
 
 # SEO pulse
 
-Read `.claude/seo-pulse.json` in the owning repository. It supplies the GSC properties,
-page prefixes, SEO logs and measurements. Missing config or access blocks that site;
-do not substitute personal sites, another property or guessed data. Read
+Read `.claude/seo-pulse.json` in the owning repository, or an explicitly supplied
+config. It supplies the GSC properties, page prefixes, SEO logs and measurements.
+If config is missing, follow the setup preflight below. Failed access blocks that
+site; do not substitute personal sites, another property or guessed data. Read
 [setup](references/setup.md) for configuration and authentication. Resolve all linked
 resources relative to this installed skill directory, using the current host's tools.
+
+## Setup preflight
+
+For a first run or applicability check, read project instructions, route sources,
+existing SEO logs and accessible GSC properties. Match the requested site or product
+to verified owned URLs and their source repositories. A matching project name or
+an accessible property alone does not establish that match.
+
+For an explicitly requested read-only assessment, use that verified scope in memory
+and report it as temporary, with no installed config or weekly delivery. Carry over
+existing measurement holds before evaluating candidates. Keep ambiguous historical
+baselines unresolved; a fresh comparison cannot replace the logged experiment.
+If ownership or scope remains unclear, report the missing evidence and stop that
+site. Propose the project config without writing it, creating issues or enabling a
+schedule. Interactive assessment needs no GitHub report issue or label.
 
 ## Interactive cycle
 
@@ -27,8 +43,12 @@ resources relative to this installed skill directory, using the current host's t
    two weeks, or it has fewer than about 100 impressions. At most one change per
    site enters implementation. Missing or anonymized rows are unknown, never a
    measured zero or proof of recovery. Report collection errors separately.
+   Treat URL fragments as sections of the same held page. Keep the original GSC
+   URL for exact evidence requests; do not merge fragment rows into page totals.
 5. For an explicitly requested implementation, use that repository's normal branch,
-   checks, PR and merge approval flow. Otherwise report the proposed change. Never
+   checks, PR and merge approval flow. Resolve the page's source owner first: it
+   may be a landing submodule or a product's documentation repository rather than
+   the report destination. Otherwise report the proposed change. Never
    use GSC mutation tools: submitting/deleting sitemaps, adding/removing properties,
    indexing requests or account switching are outside this workflow.
 6. After an implemented change, append a log entry: date, page, signal with numbers,
@@ -61,3 +81,6 @@ Give each site's clicks, impressions, CTR and position with baseline dates, page
 scope, data limits, due measurements and the one decision. "Wait" is a complete
 outcome. Link signal issues or a PR when one exists. Separate contract tests,
 host activation, real GSC access and unattended CI evidence.
+For product portfolios, show each product's owned landing/docs scope or the missing
+scope. GSC measures Google Search traffic to those pages; marketplace search,
+store visits, sales and conversion require separate provider evidence.

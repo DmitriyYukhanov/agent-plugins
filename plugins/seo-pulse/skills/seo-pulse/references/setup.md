@@ -2,14 +2,49 @@
 
 ## Project config
 
-Copy [the example](../assets/seo-pulse.example.json) to `.claude/seo-pulse.json` in
-the site repository. Set `repository` to the GitHub repository that will receive
-reports, and keep only properties and page prefixes you own. The same script
-accepts codestage.net, yarrtifacts.com or another site through this config.
+The interactive cycle reads `sites`: each site's `property`, `page_prefixes`,
+repository-relative `log` and `measurements`. It does not require a GitHub issue,
+label or service account. For an applicability check without config, follow the
+skill's setup preflight and disclose the temporary scope instead of installing it.
+
+For recurring use, copy [the example](../assets/seo-pulse.example.json) to
+`.claude/seo-pulse.json` in the site repository. Replace its example domain with
+verified properties and page prefixes you own. The same script accepts any
+accessible property through this config.
 Overlapping prefixes are rejected so scoped totals cannot count pages twice.
 Logs are relative to this repository; a property in a separate repository needs
 that repository's own config and normal implementation flow.
 
+### Product workspaces and source ownership
+
+Use one `sites` entry per property. To inspect several products on that property,
+put their disjoint landing/docs prefixes in that entry and break down evidence by
+product in the interactive report. Use the shared site log and measurement holds;
+four products are not four independent opportunities to change the same site.
+Choose either a whole-host prefix or its selected product prefixes, never both.
+
+The report repository can differ from the repository that owns a page's source.
+Read project instructions before implementation: a landing submodule may require
+its own PR followed by a parent pointer update, while product docs may be built
+from a separate product repo. An assessment started in a product workspace can
+read the owning site's existing config/log without creating copies there.
+
+Keep marketplace listing URLs outside an owned-site config unless access and
+ownership of that GSC property are verified. Owning a package does not grant
+property access for the marketplace domain. A product can have docs without a
+landing page; report only its verified scope. If neither exists, report that
+owned-page SEO coverage is unavailable rather than inventing a route or data.
+
+Import existing experiment dates and holds before choosing candidates. If a log's
+baseline includes the change day or lacks exact dates/scope, preserve it as
+unresolved. Do not shift dates to satisfy validation. A newly queried pre-change
+window is a reconstructed baseline and must be labeled separately. Keep the
+original log and hold while that discrepancy is resolved.
+
+## Weekly publication setup
+
+The remaining GitHub fields in the example are required by the weekly runner.
+Set `repository` to the GitHub repository that will receive reports.
 Create an issue titled "SEO pulse" with these markers in its body, record its
 number in `report_issue`, and pin it using the issue's sidebar:
 
@@ -39,7 +74,9 @@ After an implemented change, record it in the SEO log and add a measurement:
 ```
 
 The runner holds that exact page through October 29 and reports checks on October
-15 and 29. Remove a completed measurement through the normal reviewed config flow.
+15 and 29. Fragment variants of the page share that hold; exact GSC queries retain
+their original URLs. Do not sum fragment rows to reconstruct document totals.
+Remove a completed measurement through the normal reviewed config flow.
 The fixed baseline survives each weekly run. Weekly totals separately compare the
 last finalized 28 days with the preceding 28 days, using a three-day lag. Empty
 responses are unknown. GSC's query rows can omit anonymized or low-volume queries.

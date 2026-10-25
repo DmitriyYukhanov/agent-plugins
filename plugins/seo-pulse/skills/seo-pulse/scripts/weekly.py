@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 import sys
 from urllib.error import HTTPError
-from urllib.parse import quote, unquote, urlsplit
+from urllib.parse import quote, unquote, urldefrag, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
@@ -21,11 +21,11 @@ END = "<!-- seo-pulse:end -->"
 SIGNAL = re.compile(r"<!-- seo-pulse:signal:([A-Za-z0-9_=-]+) -->")
 
 
-def page_url(value: str) -> tuple:
+def page_url(value: str, *, allow_fragment: bool = False) -> tuple:
     """Parse a canonical HTTP URL without ambiguous path traversal."""
     parsed = urlsplit(value)
     if (parsed.scheme not in ("http", "https") or not parsed.hostname
-            or parsed.username or parsed.password or parsed.fragment
+            or parsed.username or parsed.password or (parsed.fragment and not allow_fragment)
             or any(part in (".", "..") for part in unquote(parsed.path).split("/"))
             or "\\" in unquote(value) or re.search(r"[\x00-\x20]", value)):
         raise ValueError("Invalid page URL")
@@ -35,7 +35,7 @@ def page_url(value: str) -> tuple:
 def in_scope(site: dict, page: str) -> bool:
     """Match origins and path boundaries, never a hostname string prefix."""
     try:
-        target = page_url(page)
+        target = page_url(page, allow_fragment=True)
         for prefix in site["page_prefixes"]:
             allowed = page_url(prefix)
             path = allowed[3]
@@ -88,6 +88,7 @@ def validate_config(config: dict) -> dict:
         if log.is_absolute() or ".." in log.parts or not site["log"]:
             raise ValueError("Log must be a repository-relative path")
         for measurement in site.get("measurements", []):
+            page_url(measurement["page"])
             if not in_scope(site, measurement["page"]):
                 raise ValueError("Measurement escapes page scope")
             changed = date.fromisoformat(measurement["changed_on"])
@@ -119,7 +120,7 @@ def classify(row: dict) -> str | None:
 
 def on_hold(site: dict, page: str, today: date) -> bool:
     """Hold a changed page through its four-week measurement date."""
-    return any(m["page"] == page and today <= date.fromisoformat(m["changed_on"])
+    return any(m["page"] == urldefrag(page)[0] and today <= date.fromisoformat(m["changed_on"])
                + timedelta(days=28) for m in site.get("measurements", []))
 
 
@@ -194,9 +195,9 @@ class API:
             origin = f"{scheme}://{host}" + (f":{port}" if port else "")
             expression = "^" + re.escape(origin)
             if path == "/":
-                expression += r"(?:/|\?|$)"
+                expression += r"(?:/|\?|\#|$)"
             else:
-                expression += re.escape(path) + ("" if path.endswith("/") else r"(?:/|\?|$)")
+                expression += re.escape(path) + ("" if path.endswith("/") else r"(?:/|\?|\#|$)")
             filters = [{"dimension": "page", "operator": "includingRegex",
                         "expression": expression}]
             if exact:
@@ -305,7 +306,7 @@ def plan_run(config: dict, today: date, api: API) -> list[dict]:
             if old and old["state"] == "closed":
                 continue
             if on_hold(site, url, today):
-                note = f"- Wait: {safe_text(url)} is being measured."
+                note = f"- Wait: {safe_text(urldefrag(url)[0])} is being measured."
                 if note not in lines:
                     lines.append(note)
                 continue

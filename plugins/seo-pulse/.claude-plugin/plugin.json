@@ -1,6 +1,6 @@
 {
   "name": "seo-pulse",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Run Search Console driven SEO cycles and maintain weekly reports and signal issues without editing sites.",
   "author": {"name": "Dmitry Yuhanov"}
 }

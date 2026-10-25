@@ -50,6 +50,46 @@ class WeeklyTests(unittest.TestCase):
         self.assertEqual(self.w.windows(date(2026, 10, 23)),
                          ("2026-09-23", "2026-10-20", "2026-08-26", "2026-09-22"))
 
+    def test_gsc_accepts_document_anchors_without_widening_scope(self):
+        self.site["page_prefixes"] = ["https://example.com/docs/"]
+        api = self.w.API("fake", "fake")
+        page = "https://example.com/docs/manual/index.html#how-to-use-this-manual"
+        row = {"keys": ["manual", page], "impressions": 30, "clicks": 0,
+               "ctr": 0, "position": 3.8666666666666667}
+        requests = []
+        api.request = lambda url, token, method, data=None: requests.append(data) or {"rows": [row]}
+        self.assertEqual(api.gsc(self.site, "2026-09-01", "2026-09-28",
+                                 ("query", "page"), ("manual", page)), [row])
+        self.assertEqual(requests[0]["dimensionFilterGroups"][0]["filters"][-1]["expression"], page)
+        for outside in ("https://example.com/docset/a#section",
+                        "https://other.com/docs/a#section"):
+            row["keys"][1] = outside
+            with self.subTest(outside=outside), self.assertRaises(ValueError):
+                api.gsc(self.site, "2026-09-01", "2026-09-28", ("query", "page"))
+
+    def test_fragment_variants_share_the_canonical_pages_measurement_hold(self):
+        self.site["measurements"] = [{"page": "https://example.com/a", "changed_on": "2026-10-15",
+                                      "baseline_start": "2026-09-17", "baseline_end": "2026-10-14"}]
+        rows = [{"keys": ["manual", f"https://example.com/a#section-{i}"], "impressions": 200,
+                 "clicks": 1, "ctr": .005, "position": 3} for i in range(2000)]
+        api = self.api(rows=rows)
+        plan = self.w.plan_run(self.config, date(2026, 10, 23), api)
+        self.assertEqual(len(plan), 1)
+        self.assertEqual(plan[0]["data"]["body"].count("is being measured."), 1)
+        self.assertNotIn("#section-", plan[0]["data"]["body"])
+        self.assertFalse(self.w.on_hold(self.site, "https://example.com/a?lang=en#section", date(2026, 10, 23)))
+        self.assertEqual(api.writes, [])
+
+    def test_configured_prefixes_and_measurements_remain_fragment_free(self):
+        self.site["page_prefixes"] = ["https://example.com/#section"]
+        with self.assertRaises(ValueError):
+            self.w.validate_config(self.config)
+        self.site["page_prefixes"] = ["https://example.com/"]
+        self.site["measurements"] = [{"page": "https://example.com/a#section", "changed_on": "2026-10-15",
+                                      "baseline_start": "2026-09-17", "baseline_end": "2026-10-14"}]
+        with self.assertRaises(ValueError):
+            self.w.validate_config(self.config)
+
     def test_signal_floor_and_hold(self):
         row = {"keys": ["actk", "https://example.com/a"], "impressions": 100,
                "clicks": 0, "ctr": 0, "position": 3}
@@ -243,6 +283,7 @@ class WeeklyTests(unittest.TestCase):
             expression = payloads[0]["dimensionFilterGroups"][0]["filters"][0]["expression"]
             for page in ("https://example.com/docs", "https://example.com/docs?lang=en",
                          "https://example.com/docs/", "https://example.com/docs/a",
+                         "https://example.com/docs#section", "https://example.com/docs/#section",
                          "https://example.com/docset/a"):
                 self.assertEqual(bool(re.search(expression, page)), self.w.in_scope(self.site, page),
                                  (prefix, page))
