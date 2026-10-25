@@ -5,6 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-10-26
+
+### Added
+- Distinguish possible page conflicts from normal URL overlap.
+
 ## [1.3.0] - 2026-10-26
 
 ### Added
