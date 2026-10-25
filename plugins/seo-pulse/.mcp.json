@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gsc": {
+      "command": "uvx",
+      "args": ["--python", "3.11", "mcp-search-console==0.4.1"],
+      "env": {
+        "GSC_ALLOW_DESTRUCTIVE": "false",
+        "GSC_DATA_STATE": "final"
+      }
+    }
+  }
+}

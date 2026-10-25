@@ -1,0 +1,14 @@
+{
+  "repository": "owner/site-repository",
+  "report_issue": 1,
+  "allow_public_reports": false,
+  "publisher_login": "github-actions[bot]",
+  "sites": [
+    {
+      "property": "sc-domain:example.com",
+      "page_prefixes": ["https://example.com/", "https://docs.example.com/"],
+      "log": "docs/seo/log.md",
+      "measurements": []
+    }
+  ]
+}
