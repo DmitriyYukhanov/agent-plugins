@@ -143,9 +143,10 @@ Claude reviewer adapter.
 
 ### seo-pulse
 
-Run an SEO cycle from project configuration, or maintain a weekly report and
-deduplicated signal issues without editing sites. Includes a GSC MCP adapter
-and an opt-in service-account CI template.
+Choose one SEO change from Search Console evidence, check page intent and
+internal links, and measure results at two and four weeks. Optional weekly reports
+surface signals and sustained declines without editing sites. Includes a GSC MCP
+adapter and service-account CI template.
 Install with `/plugin install seo-pulse@dmitriy-claude-plugins`.
 [Documentation](./plugins/seo-pulse/README.md).
 
