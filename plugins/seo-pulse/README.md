@@ -63,9 +63,10 @@ the page while measuring, including new inbound links. Keep other ideas parked.
 
 ## Add weekly reporting when ready
 
-Weekly mode updates a pinned GitHub report and deduplicated `seo-signal` issues,
-including due measurements and decline flags. It does not edit sites or open PRs.
-The Python runner makes no paid model call.
+Weekly mode puts due measurements and decline flags in a pinned GitHub report.
+It separately maintains deduplicated `seo-signal` issues for CTR and position
+opportunities. It does not edit sites or open PRs. The Python runner makes no
+paid model call.
 
 Follow [setup](skills/seo-pulse/references/setup.md) for Python 3.11+, credentials
 and the opt-in workflow. Inspect a dry run, authorize publication, then read back
