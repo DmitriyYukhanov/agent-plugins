@@ -21,6 +21,45 @@ setup_env() { # [host] -> HOME, $FIX, PATH with the fakes, one configured repo o
     >"$HOME/.agent-dispatch/repos.conf"
 }
 
+fake_intake() {
+  [ "$1" = "$AD_SCRIPTS/seo_intake.py" ] || return 9
+  [ "$2" = --policy ] && [ "$3" = "$HOME/.agent-dispatch/seo-incidents.json" ] || return 9
+  [ "$4" = --repository ] && [ "$5" = octo/widgets ] && [ "$6" = --admit ] || return 9
+  printf '4\tagent\n' >"$FIX/issues"
+  printf 'agent\n' >"$FIX/labels-4"
+  printf 'agent\tocto\n' >"$FIX/events-4"
+  printf 'SEO_INTAKE=admitted ISSUE=4\n'
+}
+
+# shellcheck disable=SC2329 # Python functions are exported to the dispatch subprocess.
+test_intake_runs_before_the_existing_owner_queue_pick() {
+  setup_env
+  printf '{}\n' >"$HOME/.agent-dispatch/seo-incidents.json"
+  python() { fake_intake "$@"; }
+  python3() { fake_intake "$@"; }
+  export -f python python3 fake_intake
+  export FAKE_CLI_MODE=flip:agent:review
+  dispatch
+  assert_contains "$OUT" 'SEO_INTAKE=admitted ISSUE=4'
+  assert_key "$OUT" ISSUE octo/widgets#4
+  assert_key "$OUT" TICK 'done'
+}
+
+# shellcheck disable=SC2329 # Python functions are exported to the dispatch subprocess.
+test_intake_errors_do_not_block_the_owner_queue() {
+  setup_env
+  open_issue 4 agent
+  printf '{}\n' >"$HOME/.agent-dispatch/seo-incidents.json"
+  python() { return 9; }
+  python3() { return 9; }
+  export -f python python3
+  export FAKE_CLI_MODE=flip:agent:review
+  dispatch
+  assert_key "$OUT" SEO_INTAKE error
+  assert_key "$OUT" ISSUE octo/widgets#4
+  assert_key "$OUT" TICK 'done'
+}
+
 assert_gh_called_with() { assert_contains "$(cat "$FIX/gh.log" 2>/dev/null)" "gh $1" "gh was not called with: $1"; }
 on_windows_host() { case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) return 0 ;; esac; return 1; }
 

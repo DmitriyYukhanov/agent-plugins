@@ -32,9 +32,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Ensure shellcheck (Linux)
         if: runner.os == 'Linux'
         run: shellcheck --version || { sudo apt-get update && sudo apt-get install -y shellcheck; }
 
       - name: Run agent-dispatch contract tests
         run: /bin/bash plugins/agent-dispatch/tests/run-tests.sh
+
+      - name: Run trusted SEO intake tests
+        run: python -B -m unittest discover -s plugins/agent-dispatch/tests -p test_seo_intake.py

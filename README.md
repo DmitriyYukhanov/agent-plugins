@@ -70,7 +70,7 @@ refresh commands, and a possible later marketplace ID change.
 
 | Plugin | Purpose | Host scope |
 |---|---|---|
-| [agent-dispatch](#agent-dispatch) | Dispatch queued GitHub issues on your machine | Claude Code or Codex CLI |
+| [agent-dispatch](#agent-dispatch) | Dispatch owner-approved issues and verified SEO incidents locally | Claude Code or Codex CLI |
 | [claude-md-slim](#claude-md-slim) | Audit and split oversized CLAUDE.md instructions | Shared scripts; targets Claude configuration |
 | [codex-collaboration](#codex-collaboration) | Coordinate Claude-led work and Codex validation | Claude Code adapter with Codex companion |
 | [humanizer](#humanizer) | Edit English and Russian AI writing | Shared skills |
