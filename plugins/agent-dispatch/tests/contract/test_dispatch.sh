@@ -31,7 +31,7 @@ fake_intake() {
   printf 'SEO_INTAKE=admitted ISSUE=4\n'
 }
 
-# shellcheck disable=SC2329 # Python functions are exported to the dispatch subprocess.
+# shellcheck disable=SC2317,SC2329 # Python functions are exported to the dispatch subprocess.
 test_intake_runs_before_the_existing_owner_queue_pick() {
   setup_env
   printf '{}\n' >"$HOME/.agent-dispatch/seo-incidents.json"
@@ -45,7 +45,7 @@ test_intake_runs_before_the_existing_owner_queue_pick() {
   assert_key "$OUT" TICK 'done'
 }
 
-# shellcheck disable=SC2329 # Python functions are exported to the dispatch subprocess.
+# shellcheck disable=SC2317,SC2329 # Python functions are exported to the dispatch subprocess.
 test_intake_errors_do_not_block_the_owner_queue() {
   setup_env
   open_issue 4 agent
