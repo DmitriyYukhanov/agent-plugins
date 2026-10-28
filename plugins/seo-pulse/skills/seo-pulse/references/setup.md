@@ -41,6 +41,12 @@ unresolved. Do not shift dates to satisfy validation. A newly queried pre-change
 window is a reconstructed baseline and must be labeled separately. Keep the
 original log and hold while that discrepancy is resolved.
 
+### Optional product context
+
+Follow the [context procedure](../SKILL.md#project-context) to reuse project
+documents and decide whether an optional summary would help. It adds no config
+key or weekly-runner requirement.
+
 ## Weekly publication setup
 
 The remaining GitHub fields in the example are required by the weekly runner.
