@@ -41,6 +41,17 @@ unresolved. Do not shift dates to satisfy validation. A newly queried pre-change
 window is a reconstructed baseline and must be labeled separately. Keep the
 original log and hold while that discrepancy is resolved.
 
+### Optional product context
+
+Read existing project and product documents before proposing another file. If
+context is scattered or missing, a small optional `docs/seo/context.md` can link
+the product, buyer/task, target market/language, current goal, verified facts and
+proof, and documented competitors to authoritative project sources. Keep unknowns
+explicit; the summary cannot supply proof its sources lack. The
+[context procedure](../SKILL.md#project-context) works without this file and
+proposes it without writing during a read-only assessment. It adds no config key
+or weekly-runner requirement.
+
 ## Weekly publication setup
 
 The remaining GitHub fields in the example are required by the weekly runner.

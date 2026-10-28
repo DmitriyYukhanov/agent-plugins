@@ -27,6 +27,30 @@ If ownership or scope remains unclear, report the missing evidence and stop that
 site. Propose the project config without writing it, creating issues or enabling a
 schedule. Interactive assessment needs no GitHub report issue or label.
 
+## Project context
+
+Before selecting an opportunity, read existing project instructions, route sources,
+the SEO log and relevant product documents. Reuse them to identify the product,
+buyer and task, target market/language, current goal, verified features and limits,
+proof, and documented competitors. Keep source links and read dates with material
+facts. Competitor pages can suggest questions, but cannot prove your product's
+capabilities. A stated goal is not an observed conversion result.
+
+Mark missing, conflicting or unsupported facts as unknown. Continue independent
+supported checks; defer only conclusions that need those facts. If a reusable
+summary would help, propose a small optional `docs/seo/context.md` with the context
+above and links to authoritative project documents. Prefer links over duplicated
+documentation. Its absence is not a prerequisite failure. During a read-only
+assessment, propose it without writing it. Keep credentials and private raw
+evidence outside tracked or public files.
+
+Use this context to judge whether the query, current page and buyer task serve the
+documented goal. Explain missing product fit instead of chasing traffic alone.
+Context cannot override unknown GSC data, destination checks or measurement holds.
+Content planning from verified facts needs no GSC sample; implementation still
+respects holds and the page owner's reviewed flow. Standalone content requests
+and recorded AI-citation analysis do not activate this GSC workflow by themselves.
+
 ## Interactive cycle
 
 1. Read each configured SEO log and measurement. Keep the fixed pre-change baseline,
@@ -105,10 +129,23 @@ existing markers before another run; never retry a create blindly.
 
 ## Report
 
-Give each site's clicks, impressions, CTR and position with baseline dates, page
-scope, data limits, due measurements and the one decision. "Wait" is a complete
-outcome. Link signal issues or a PR when one exists. Separate contract tests,
-host activation, real GSC access and unattended CI evidence.
+For each site's interactive assessment, separate these parts:
+
+1. Observation: cite the source and read date or measurement window, exact scope,
+   data state and limits. Include clicks, impressions, CTR and position with
+   baseline dates and due measurements. Keep missing data distinct from zero.
+2. Interpretation: explain the query's fit with the current page, product and
+   buyer task, and how a change could serve the documented goal. Label inference
+   and unknowns; search metrics alone do not establish business results.
+3. Proposal or wait: give the smallest supported change or the reason to wait,
+   including which missing evidence would resolve it. Existing sample checks,
+   holds and the one-change-per-site limit still apply.
+4. Verification: state what was checked, what remains unverified, and the next
+   evidence check. For an implemented change, retain the fixed baseline and
+   +14/+28-day checks; observed movement does not establish causation.
+
+"Wait" is a complete outcome. Link signal issues or a PR when one exists.
+Separate contract tests, host activation, real GSC access and unattended CI evidence.
 For product portfolios, show each product's owned landing/docs scope or the missing
 scope. GSC measures Google Search traffic to those pages; marketplace search,
 store visits, sales and conversion require separate provider evidence.

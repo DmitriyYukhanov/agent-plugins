@@ -26,6 +26,9 @@ You need GSC access and readable current pages. The first assessment can use
 verified temporary scope. For repeat runs, the
 [setup guide](skills/seo-pulse/references/setup.md) covers
 `.claude/seo-pulse.json`, authentication and optional adapters.
+The assessment reuses project and product docs to connect the query to the buyer
+and current goal. Missing facts stay unknown; a context summary is optional and
+is only proposed during a read-only run.
 
 ## Decisions it supports
 
@@ -44,8 +47,8 @@ review waits for sufficient coverage. Observed movement does not prove causation
 
 ## Use it effectively
 
-Start with a real query and page. For a content review, supply product docs or
-other factual evidence and ask:
+Start with a real query and page. When that opportunity needs a content review,
+supply product docs or other factual evidence and ask:
 
 > Identify the user's task, missing answers and relevant product facts. Propose
 > the smallest useful content brief: opening answer, headings and exact placement.
