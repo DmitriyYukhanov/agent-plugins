@@ -43,14 +43,9 @@ original log and hold while that discrepancy is resolved.
 
 ### Optional product context
 
-Read existing project and product documents before proposing another file. If
-context is scattered or missing, a small optional `docs/seo/context.md` can link
-the product, buyer/task, target market/language, current goal, verified facts and
-proof, and documented competitors to authoritative project sources. Keep unknowns
-explicit; the summary cannot supply proof its sources lack. The
-[context procedure](../SKILL.md#project-context) works without this file and
-proposes it without writing during a read-only assessment. It adds no config key
-or weekly-runner requirement.
+Follow the [context procedure](../SKILL.md#project-context) to reuse project
+documents and decide whether an optional summary would help. It adds no config
+key or weekly-runner requirement.
 
 ## Weekly publication setup
 

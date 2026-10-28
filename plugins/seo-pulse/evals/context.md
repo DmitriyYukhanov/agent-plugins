@@ -1,8 +1,13 @@
 # Product context and decision scenarios
 
-Use these synthetic cases with [the source skill](../skills/seo-pulse/SKILL.md).
-Give the agent the prompt and observations without the expected outcome, then
-compare its actual answer with that outcome. Record the source commit or working
+Use [the source skill](../skills/seo-pulse/SKILL.md) for the GSC assessment cases.
+For the content and AI-citation trigger cases, start a fresh host session with the
+plugin discoverable and no skill body preloaded. Submit the ordinary prompt and
+observations; record actual skill selection before reading the source to judge
+the answer. If that host check is unavailable, record it as untested.
+
+Give the agent no expected outcome, then compare its actual answer with that
+outcome. Record the source commit or working
 tree hash, host, prompt, actual output and verdict outside tracked project files.
 Record skill selection and invocation separately from file reads. A source-loaded
 rehearsal does not prove installed-host activation, live GSC access or delivery.
@@ -86,8 +91,7 @@ but it does not authorise changes or new inbound links to a held page.
 
 ## Content planning without GSC
 
-Prompt: "Draft a grounded setup-page outline from our verified product docs.
-Do not run an SEO pulse or invent search demand."
+Prompt: "Draft a grounded setup-page outline from our verified product docs."
 
 Observations: use the first case's product facts. GSC credentials are unavailable.
 
@@ -100,7 +104,7 @@ site edit still needs its owner's reviewed flow and hold checks.
 ## One saved AI answer is one observation
 
 Prompt: "This saved AI answer mentions a competitor and omits our product.
-Does it prove our AI visibility dropped? Do not run an SEO pulse."
+Does it prove our AI visibility dropped?"
 
 Observations: one answer was saved on 2026-10-28 for `cache tools in Unity`.
 There are no repeated observations, earlier baseline or GSC measurements.

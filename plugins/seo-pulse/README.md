@@ -29,6 +29,8 @@ verified temporary scope. For repeat runs, the
 The assessment reuses project and product docs to connect the query to the buyer
 and current goal. Missing facts stay unknown; a context summary is optional and
 is only proposed during a read-only run.
+Standalone content planning and recorded AI-citation analysis do not activate
+this GSC workflow by themselves.
 
 ## Decisions it supports
 
