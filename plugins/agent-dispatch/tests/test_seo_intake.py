@@ -4,7 +4,7 @@ import base64
 import copy
 from datetime import datetime, timezone
 import hashlib
-from http.client import IncompleteRead
+from http.client import HTTPResponse, IncompleteRead
 import importlib.util
 import io
 import json
@@ -13,6 +13,8 @@ from email.message import Message
 import re
 import sys
 import subprocess
+from threading import Event
+from time import monotonic
 import unittest
 from unittest.mock import patch
 from urllib.request import HTTPSHandler, Request, build_opener
@@ -74,6 +76,8 @@ def archive(report):
 class IntakeTests(unittest.TestCase):
     def setUp(self):
         self.assertIsNotNone(seo, "trusted intake adapter is absent")
+        if hasattr(seo, "DEADLINE"):
+            patch.object(seo, "DEADLINE", float("inf")).start()
         self.policy = copy.deepcopy(POLICY)
         self.value = evidence()
         self.current = issue(self.value)
@@ -98,6 +102,7 @@ class IntakeTests(unittest.TestCase):
             "workflow_run": {"id": 123, "head_branch": "main", "head_sha": SHA},
         }]
         self.real_api = seo.gh_api
+        self.real_fetch = seo.fetch_url
         self.api = patch.object(seo, "gh_api", side_effect=self.github).start()
         self.http = patch.object(seo, "fetch_url", return_value=(503, {}, b"")).start()
         self.addCleanup(patch.stopall)
@@ -348,6 +353,7 @@ class IntakeTests(unittest.TestCase):
         value = evidence("canonical", {"canonical": None})
         self.http.return_value = (200, {}, b'<head>' + b'<link rel="canonical" href="https://codestage.net/support/">' * 2 + b'</head>')
         self.assertTrue(seo.confirm_failure(value, self.policy))
+        value = evidence("noindex", {"noindex": True})
         self.http.return_value = (200, {"X-Robots-Tag": "noindex, unavailable_after: 25 Jun 2030 15:00:00 PST"}, b"ok")
         self.assertTrue(seo.confirm_failure(value, self.policy))
 
@@ -384,13 +390,132 @@ class IntakeTests(unittest.TestCase):
                 self.http.return_value = (200, {}, markup)
                 self.assertTrue(seo.confirm_failure(value, self.policy))
 
+    def test_implicit_head_canonical_is_healthy_but_body_content_ends_head(self):
+        value = evidence("canonical", {"canonical": None})
+        for markup, failing in [
+            (b'<!doctype html><html><link rel="canonical" href="https://codestage.net/support/"><p>Hello', False),
+            (b'<html><title>Healthy page</title><link rel="canonical" href="https://codestage.net/support/">', False),
+            (b'<html><title>Choose <b>Pro</b></title><link rel="canonical" href="https://codestage.net/support/">', False),
+            (b'<html><title><link rel="canonical" href="https://codestage.net/support/"></title>', True),
+            (b'<head><template><link rel="canonical" href="https://evil.test/"></template><link rel="canonical" href="https://codestage.net/support/">', False),
+            (b'<html>Body text<link rel="canonical" href="https://codestage.net/support/">', True),
+            (b'<html><div><link rel="canonical" href="https://codestage.net/support/">', True),
+            (b'<body><head><link rel="canonical" href="https://codestage.net/support/">', True),
+        ]:
+            with self.subTest(markup=markup):
+                self.http.return_value = (200, {}, markup)
+                self.assertEqual(failing, seo.confirm_failure(value, self.policy))
+
+    def test_public_http_budget_includes_headers_and_chunk_framing(self):
+        for blocked_phase in ("headers", "chunk"):
+            with self.subTest(phase=blocked_phase):
+                release, blocked, finished = Event(), Event(), Event()
+                class Drip(io.BytesIO):
+                    def readline(self, *args):
+                        line = super().readline(*args)
+                        if ((blocked_phase == "headers" and line.startswith(b"Transfer-Encoding"))
+                                or (blocked_phase == "chunk" and line == b"1\r\n")):
+                            blocked.set()
+                            release.wait(2)
+                        return line
+                class Socket:
+                    def makefile(self, *args):
+                        return Drip(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx\r\n0\r\n\r\n")
+                response = HTTPResponse(Socket())
+                response.url = ORIGIN + "/support/"
+                def open_response(*args, **kwargs):
+                    response.begin()
+                    return response
+                original_fetch = seo.fetch_response
+                def fetch(*args):
+                    try:
+                        return original_fetch(*args)
+                    finally:
+                        finished.set()
+                started = monotonic()
+                with patch.object(seo, "DEADLINE", started + 0.1), \
+                        patch.object(seo, "fetch_response", side_effect=fetch), \
+                        patch.object(seo, "build_opener") as opener:
+                    opener.return_value.open.side_effect = open_response
+                    try:
+                        with self.assertRaises(TimeoutError):
+                            self.real_fetch(response.url, ORIGIN)
+                        self.assertTrue(blocked.is_set())
+                        self.assertLess(monotonic() - started, 1)
+                    finally:
+                        release.set()
+                        self.assertTrue(finished.wait(1))
+
+    def test_admission_cursor_gives_later_issues_a_turn_after_budget_exhaustion(self):
+        calls, cursor, elapsed = [], [""], [0]
+        def admit(number, *args, **kwargs):
+            calls.append(number)
+            elapsed[0] += 61
+            return "eligible"
+        with patch.object(sys, "argv", ["seo_intake", "--policy", "policy.json", "--repository", REPO, "--admit"]), \
+                patch.object(Path, "read_bytes", return_value=json.dumps(POLICY).encode()), \
+                patch.object(Path, "read_text", side_effect=lambda **kw: cursor[0]), \
+                patch.object(Path, "write_text", side_effect=lambda text, **kw: cursor.__setitem__(0, text)) as save, \
+                patch.object(seo, "monotonic", side_effect=lambda: elapsed[0]), \
+                patch.object(seo, "admit_issue", side_effect=admit), \
+                patch.object(sys, "stdout", new_callable=io.StringIO):
+            self.api.return_value = [issue(), dict(issue(), number=8)]
+            self.api.side_effect = None
+            self.assertEqual(0, seo.main())
+            self.assertEqual(0, seo.main())
+            self.assertEqual([7, 8], calls)
+            self.assertEqual(2, save.call_count)
+
+    def test_cursor_path_cannot_overwrite_a_policy_with_cursor_suffix(self):
+        with patch.object(sys, "argv", ["seo_intake", "--policy", "policy.cursor", "--repository", REPO, "--admit"]), \
+                patch.object(Path, "read_bytes", return_value=json.dumps(POLICY).encode()), \
+                patch.object(Path, "read_text", side_effect=FileNotFoundError), \
+                patch.object(Path, "write_text", autospec=True) as save, \
+                patch.object(seo, "admit_issue", return_value="admitted"), \
+                patch.object(sys, "stdout", new_callable=io.StringIO):
+            self.api.side_effect = None
+            self.api.return_value = [issue()]
+            self.assertEqual(0, seo.main())
+            self.assertNotEqual(Path("policy.cursor"), save.call_args.args[0])
+
+    def test_intake_budget_returns_control_before_later_candidates(self):
+        original = self.github
+        def github(path, **kwargs):
+            if "/issues?state=open" in path:
+                return [issue(), dict(issue(), number=8)]
+            return original(path, **kwargs)
+        elapsed = [0]
+        calls = []
+        def admit(number, *args, **kwargs):
+            calls.append(number)
+            elapsed[0] += 61
+            return "eligible"
+        self.api.side_effect = github
+        with patch.object(sys, "argv", ["seo_intake", "--policy", "policy.json", "--repository", REPO]), \
+                patch.object(Path, "read_bytes", return_value=json.dumps(POLICY).encode()), \
+                patch.object(Path, "write_text") as save, \
+                patch.object(seo, "monotonic", create=True, side_effect=lambda: elapsed[0]), \
+                patch.object(seo, "admit_issue", side_effect=admit), \
+                patch.object(sys, "stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(0, seo.main())
+            self.assertEqual([7], calls)
+            self.assertIn("SEO_INTAKE=deferred", output.getvalue())
+            save.assert_not_called()
+
+    def test_expired_budget_prevents_gh_mutation(self):
+        with patch.object(seo, "DEADLINE", 0, create=True), \
+                patch.object(subprocess, "run") as command:
+            with self.assertRaises(TimeoutError):
+                self.real_api("repos/test/site/issues/7/labels", data={"labels": ["agent"]})
+            command.assert_not_called()
+
     def test_main_paginates_candidates_instead_of_hiding_later_issues(self):
         original = self.github
-        listing = f"repos/{REPO}/issues?state=open&labels=seo-incident&sort=created&direction=asc&per_page=100"
+        listing = f"repos/{REPO}/issues?state=open&labels=seo-incident&sort=updated&direction=desc&per_page=100"
         def github(path, **kwargs):
             if path == listing:
                 self.assertTrue(kwargs.get("paginate"), "candidate listing must request all pages")
-                return [{"number": n} for n in range(100, 200)] + [{"number": 7}]
+                return [{"number": n, "state": "closed"} for n in range(100, 200)] + [issue()]
             if re.fullmatch(f"repos/{REPO}/issues/1[0-9][0-9]", path):
                 return {"state": "closed"}
             return original(path, **kwargs)
@@ -407,7 +532,7 @@ class IntakeTests(unittest.TestCase):
         original = self.github
         def github(path, **kwargs):
             if "/issues?state=open" in path:
-                return [{"number": 7}, {"number": 8}]
+                return [issue(), dict(issue(), number=8)]
             return original(path.replace("/issues/8", "/issues/7"), **kwargs)
         self.api.side_effect = github
         self.http.side_effect = [IncompleteRead(b"partial", 5), (503, {}, b"")]

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [1.4.0] - 2026-10-27
 
 ### Added
-- Admit verified SEO incidents into the owner queue after confirming the live failure.
+- Admit verified SEO incidents without delaying the owner queue.
 
 ## [1.3.3] - 2026-10-12
 

@@ -39,6 +39,14 @@ On Windows use `python` in place of `python3`. Python 3.11 or newer and the owne
 `gh` are required. To admit eligible issues immediately, append `--admit`. This command adds
 labels but never launches workers. Each candidate prints `SEO_INTAKE=eligible`, `admitted`, or
 `skipped`; a policy or listing failure returns nonzero and prints `SEO_INTAKE=error`.
+Each scan has a 60-second budget. The first scan starts with the most recently updated issues;
+admission scans save the next candidate number in `seo-incidents.json.cursor` beside the policy.
+Later scans resume there so a slow candidate cannot monopolize every tick. Already admitted or
+malformed issues in the listing need no further requests. Runs without `--admit` never write
+labels or cursor state. GitHub subprocesses and public HTTP requests share the remaining budget;
+each public request also has a 15-second elapsed limit, including headers and redirects.
+Expiry prevents further label requests.
+An exhausted scan prints `SEO_INTAKE=deferred` when candidates remain.
 
 For scheduled admission, add the verified primary checkout to `repos.conf` through setup with the
 chosen worker host and merge threshold. Each tick runs intake only for repositories in that file,
@@ -80,7 +88,7 @@ of the local UTC clock. The five-minute allowance also covers the observation-to
 | --- | --- | --- |
 | `http-status` | `{"status":503}`: integer 100 to 599 except 200 | Final HTTP status differs from 200 |
 | `noindex` | `{"noindex":true}` | Robots meta or applicable X-Robots-Tag says noindex/none |
-| `canonical` | `{"canonical":null}` or a raw string of at most 2048 characters | Canonical link is missing, duplicated, or differs from the pinned string |
+| `canonical` | `{"canonical":null}` or a raw string of at most 2048 characters | Canonical link in the explicit or implicit head is missing, duplicated, or differs from the pinned string |
 | `robots` | `{"allowed":false}` | The origin's robots.txt blocks Googlebot for the page |
 | `sitemap` | `{"present":false}` | The page URL is absent from the pinned XML sitemap |
 

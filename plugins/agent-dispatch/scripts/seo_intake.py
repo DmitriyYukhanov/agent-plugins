@@ -10,9 +10,12 @@ from html.parser import HTMLParser
 import io
 import json
 from pathlib import Path
+from queue import Empty, Queue
 import re
 import subprocess
 import sys
+from threading import Thread
+from time import monotonic
 from urllib.error import HTTPError
 from urllib.parse import unquote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -23,6 +26,7 @@ import zipfile
 LIMIT = 1_048_576
 MAX_AGE = timedelta(hours=2)
 SKEW = timedelta(minutes=5)
+DEADLINE = float("inf")
 FIELDS = set("version repository run_id head_sha observed_at incident_key rule url expected_canonical observed".split())
 MARKER = re.compile(r"<!-- seo-incident:v1 ([A-Za-z0-9_-]{1,10923}) -->\n?")
 
@@ -30,6 +34,13 @@ MARKER = re.compile(r"<!-- seo-incident:v1 ([A-Za-z0-9_-]{1,10923}) -->\n?")
 def require(condition: bool, reason: str) -> None:
     if not condition:
         raise ValueError(reason)
+
+
+def io_timeout(limit: float) -> float:
+    remaining = DEADLINE - monotonic()
+    if remaining <= 0:
+        raise TimeoutError("intake budget exhausted")
+    return min(limit, remaining)
 
 
 def json_object(pairs: list) -> dict:
@@ -98,7 +109,7 @@ def gh_api(path: str, *, data: dict | None = None, paginate: bool = False,
     if data is not None:
         args += ["--method", "POST", "--input", "-"]
     result = subprocess.run(args, input=compact(data).encode() if data is not None else None,
-                            capture_output=True, timeout=45, check=False)
+                            capture_output=True, timeout=io_timeout(45), check=False)
     require(result.returncode == 0, "GitHub request failed")
     require(len(result.stdout) <= (LIMIT if binary else 8 * LIMIT), "GitHub response exceeds limit")
     if binary:
@@ -221,15 +232,35 @@ class ScopedRedirect(HTTPRedirectHandler):
         scope_url(newurl, self.origin)
         self.count += 1
         require(self.count <= 5, "too many redirects")
+        req.timeout = io_timeout(15)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch_url(url: str, origin: str) -> tuple:
+    result = Queue(maxsize=1)
+    def request() -> None:
+        try:
+            result.put((True, fetch_response(url, origin)))
+        except Exception as error:
+            result.put((False, error))
+    timeout = io_timeout(15)
+    # Socket inactivity limits do not bound slow headers or chunk framing.
+    Thread(target=request, daemon=True).start()
+    try:
+        success, value = result.get(timeout=timeout)
+    except Empty:
+        raise TimeoutError("public HTTP request exceeded its budget") from None
+    if not success:
+        raise value
+    return value
+
+
+def fetch_response(url: str, origin: str) -> tuple:
     scope_url(url, origin)
     request = Request(url, headers={"User-Agent": "Googlebot", "Cache-Control": "no-cache"})
     opener = build_opener(ScopedRedirect(origin))
     try:
-        response = opener.open(request, timeout=15)
+        response = opener.open(request, timeout=io_timeout(15))
     except HTTPError as error:
         response = error
     with response:
@@ -240,18 +271,26 @@ def fetch_url(url: str, origin: str) -> tuple:
 
 
 class PageSignals(HTMLParser):
+    CDATA_CONTENT_ELEMENTS = ("script", "style", "title")
+
     def __init__(self) -> None:
         super().__init__()
         self.noindex = False
         self.canonicals = []
-        self.in_head = False
+        self.in_head = True
+        self.text_tag = ""
+        self.ignored = []
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         values = dict(attrs)
-        if tag == "head":
-            self.in_head = True
-        elif tag == "body":
+        if tag in ("template", "noscript"):
+            self.ignored.append(tag)
+        if self.ignored:
+            return
+        if tag not in ("html", "head", "title", "base", "link", "meta", "style", "script"):
             self.in_head = False
+        if self.in_head and tag in ("title", "style", "script"):
+            self.text_tag = tag
         if tag not in ("meta", "link"):
             return
         require(len(attrs) == len(values), "ambiguous HTML attributes")
@@ -262,7 +301,17 @@ class PageSignals(HTMLParser):
             self.canonicals.append(values.get("href"))
 
     def handle_endtag(self, tag: str) -> None:
+        if self.ignored:
+            if tag == self.ignored[-1]:
+                self.ignored.pop()
+            return
         if tag == "head":
+            self.in_head = False
+        if tag == self.text_tag:
+            self.text_tag = ""
+
+    def handle_data(self, data: str) -> None:
+        if not self.ignored and not self.text_tag and data.strip():
             self.in_head = False
 
 
@@ -389,6 +438,8 @@ def admit_issue(number: int, policy: dict, now: datetime, *, admit: bool = False
 
 
 def main() -> int:
+    global DEADLINE
+    DEADLINE = monotonic() + 60
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy", required=True, type=Path)
     parser.add_argument("--repository", required=True)
@@ -399,13 +450,27 @@ def main() -> int:
         validate_policy(policy)
         if args.repository != policy["repository"]:
             return 0
-        issues = gh_api(f"repos/{policy['repository']}/issues?state=open&labels=seo-incident&sort=created&direction=asc&per_page=100",
+        issues = gh_api(f"repos/{policy['repository']}/issues?state=open&labels=seo-incident&sort=updated&direction=desc&per_page=100",
                         paginate=True)
         require(isinstance(issues, list), "invalid issue listing")
-        for issue in issues:
+        require(all(type(issue["number"]) is int and issue["number"] > 0 for issue in issues),
+                "invalid issue number")
+        cursor = args.policy.with_name(args.policy.name + ".cursor")
+        try:
+            resume = int(cursor.read_text(encoding="utf-8"))
+        except (FileNotFoundError, ValueError):
+            resume = 0
+        start = next((index for index, issue in enumerate(issues) if issue["number"] == resume), 0)
+        issues = issues[start:] + issues[:start]
+        for index, issue in enumerate(issues):
+            if monotonic() >= DEADLINE:
+                print("SEO_INTAKE=deferred")
+                break
             number = issue["number"]
-            require(type(number) is int and number > 0, "invalid issue number")
             try:
+                parse_evidence(issue, policy)
+                if args.admit:
+                    cursor.write_text(str(issues[(index + 1) % len(issues)]["number"]), encoding="utf-8")
                 outcome = admit_issue(number, policy, datetime.now(timezone.utc), admit=args.admit)
                 print(f"SEO_INTAKE={outcome} ISSUE={number}")
             except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError,
