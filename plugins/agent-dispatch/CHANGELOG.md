@@ -5,6 +5,11 @@ All notable changes to the **agent-dispatch** plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-10-27
+
+### Added
+- Admit verified SEO incidents without delaying the owner queue.
+
 ## [1.3.3] - 2026-10-12
 
 ### Changed

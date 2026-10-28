@@ -27,6 +27,11 @@ run asks you something, waits for your `merge`, or fails, the tick runs `~/.agen
 if it exists. You choose where that script sends the message. Setup shows an example for ntfy and
 a command to test it.
 
+An optional [trusted SEO intake](references/seo-incidents.md) can apply `agent` through your local
+GitHub login. It checks a pinned Actions workflow, its successful run and evidence artifact, and
+the current public failure before admitting an issue. Without a local policy, the tick only uses
+the owner queue above. Python 3.11 or newer is needed only for this intake.
+
 ## Install
 
 ```

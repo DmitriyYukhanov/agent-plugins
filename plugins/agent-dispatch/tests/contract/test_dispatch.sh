@@ -10,7 +10,7 @@
 setup_env() { # [host] -> HOME, $FIX, PATH with the fakes, one configured repo octo/widgets
   export HOME="$TEST_TMPDIR/home" FIX="$TEST_TMPDIR/fix"
   mkdir -p "$HOME/.agent-dispatch" "$FIX" "$TEST_TMPDIR/checkout"
-  REAL_SLEEP=$(command -v sleep)
+  REAL_SLEEP=${REAL_SLEEP:-$(command -v sleep)}
   export REAL_SLEEP
   export PATH="$AD_FIXTURES/bin:$AD_FIXTURES/fake-gh:$AD_FIXTURES/fake-cli:$PATH"
   export FAKE_GH_FIX="$FIX" FAKE_CLI_LOG="$FIX/cli.log" FAKE_CLOCK="$FIX/clock"
@@ -19,6 +19,62 @@ setup_env() { # [host] -> HOME, $FIX, PATH with the fakes, one configured repo o
   printf 'octo/widgets\n' >"$FIX/repo"
   printf '# path | host | auto-merge\n%s | %s | trivial\n' "$TEST_TMPDIR/checkout" "${1:-claude}" \
     >"$HOME/.agent-dispatch/repos.conf"
+}
+
+fake_intake() {
+  [ "$1" = "$AD_SCRIPTS/seo_intake.py" ] || return 9
+  [ "$2" = --policy ] && [ "$3" = "$HOME/.agent-dispatch/seo-incidents.json" ] || return 9
+  [ "$4" = --repository ] && [ "$5" = octo/widgets ] && [ "$6" = --admit ] || return 9
+  printf '4\tagent\n' >"$FIX/issues"
+  printf 'agent\n' >"$FIX/labels-4"
+  printf 'agent\tocto\n' >"$FIX/events-4"
+  printf 'SEO_INTAKE=admitted ISSUE=4\n'
+}
+
+# shellcheck disable=SC2317,SC2329 # Python functions are exported to the dispatch subprocess.
+test_intake_runs_before_the_existing_owner_queue_pick() {
+  setup_env
+  printf '{}\n' >"$HOME/.agent-dispatch/seo-incidents.json"
+  python() { fake_intake "$@"; }
+  python3() { fake_intake "$@"; }
+  export -f python python3 fake_intake
+  export FAKE_CLI_MODE=flip:agent:review
+  dispatch
+  assert_contains "$OUT" 'SEO_INTAKE=admitted ISSUE=4'
+  assert_key "$OUT" ISSUE octo/widgets#4
+  assert_key "$OUT" TICK 'done'
+}
+
+# shellcheck disable=SC2317,SC2329 # Python functions are exported to the dispatch subprocess.
+test_intake_errors_do_not_block_the_owner_queue() {
+  setup_env
+  open_issue 4 agent
+  printf '{}\n' >"$HOME/.agent-dispatch/seo-incidents.json"
+  python() { return 9; }
+  python3() { return 9; }
+  export -f python python3
+  export FAKE_CLI_MODE=flip:agent:review
+  dispatch
+  assert_key "$OUT" SEO_INTAKE error
+  assert_key "$OUT" ISSUE octo/widgets#4
+  assert_key "$OUT" TICK 'done'
+}
+
+test_fake_clock_waits_for_the_cli_readiness_signal() {
+  setup_env
+  export FAKE_SLEEP_READY="$FIX/ready" FAKE_SLEEP_REAL=0
+  ("$REAL_SLEEP" 0.2; printf 'ready\n' >"$FAKE_SLEEP_READY") &
+  local writer=$!
+  "$BASH" "$AD_FIXTURES/bin/sleep" 1
+  [ -s "$FAKE_SLEEP_READY" ] || fail "fake time advanced before the launcher was ready"
+  wait "$writer"
+}
+
+test_repeated_setup_keeps_the_real_sleep_executable() {
+  setup_env
+  local original=$REAL_SLEEP
+  setup_env
+  [ "$REAL_SLEEP" = "$original" ] || fail "repeated setup selected the fake sleep"
 }
 
 assert_gh_called_with() { assert_contains "$(cat "$FIX/gh.log" 2>/dev/null)" "gh $1" "gh was not called with: $1"; }
@@ -422,7 +478,8 @@ test_the_deadline_stops_the_run_and_fails_it() {
   trap kill_stray_run EXIT
   notify_hook
   open_issue 4 agent
-  export FAKE_CLI_MODE=hang FAKE_SLEEP_STEP=3600 FAKE_SLEEP_REAL=1
+  # The accelerated four-hour clock starts after the real launcher has published its CLI.
+  export FAKE_CLI_MODE=hang FAKE_SLEEP_STEP=3600 FAKE_SLEEP_REAL=1 FAKE_SLEEP_READY="$FIX/hang.pids"
   start=$SECONDS
   dispatch 3600
   # SECONDS is bash's own real-time clock, untouched by the fake date/sleep fixtures: a stop that

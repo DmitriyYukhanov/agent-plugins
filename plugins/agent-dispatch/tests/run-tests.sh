@@ -37,6 +37,7 @@ for tf in "$HERE"/contract/test_*.sh; do
   fi
   for fn in $functions; do
     total=$((total + 1))
+    printf '  run  %s :: %s\n' "${tf##*/}" "$fn"
     if out=$("$BASH" --norc -c '
         set -uo pipefail
         TEST_TMPDIR=$(mktemp -d)
