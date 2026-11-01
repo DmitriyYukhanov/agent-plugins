@@ -215,8 +215,9 @@ test_state_bare_clone_worktrees_share_git_metadata() {
   run_script state.sh
   assert_rc 0
   assert_key "$OUT" RUN_DIR "$common/issue-to-pr/run-feat-stwo"
-  [ ! -e "$one/.claude" ] && [ ! -e "$two/.claude" ] && [ ! -e "$bare/.claude" ] ||
+  if [ -e "$one/.claude" ] || [ -e "$two/.claude" ] || [ -e "$bare/.claude" ]; then
     fail "bare clone bootstrap created source-tree state"
+  fi
 }
 
 test_state_refuses_symlinked_metadata_paths_before_writing() {
