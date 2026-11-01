@@ -43,8 +43,4 @@ The command makes no GitHub mutations, indexing requests or repairs. It is indep
 ## Optional workflow
 
 Copy the [manual template](../assets/technical.yml) through the site's reviewed change process after confirming the policy. Supply a reviewed plugin commit/tag accessible to that workflow. It has read-only repository permission, no provider secrets and no schedule. A report artifact and successful manual run do not prove installation in another host or actual unattended execution. Adding a schedule, provisioning GSC or enabling issue admission/repair requires its own authorized step.
-
-
-For automatic future checks, the [scheduled template](../assets/technical-scheduled.yml) invokes the same command daily at 09:00 UTC (12:00 Europe/Moscow), with manual dispatch as well. This is a proposed cadence, not an enabled schedule. It requires a reviewed full commit SHA through the SEO_PULSE_COMMIT repository variable or manual input and fails before checkout if that pin is absent. It retains contents: read and report artifacts only.
-
-After merge and owner approval, replace the site's manual workflow with the reviewed scheduled template through the site PR flow; do not install both templates under the same workflow name. Confirm the configured pin, actual next run in the owner's timezone and the first completed event=schedule run. Inspect its run ID, commit, exact config, report artifact, non-empty observations and coverage/failure counts. A failed or incomplete run is not a healthy canary. No real unattended run has been verified by shipping this template.
+For automatic reports, integrate the same command into the site's existing reviewed workflow with a full plugin commit pin. Confirm the actual next run in the owner's timezone and the first completed scheduled event: run ID, source/config, report artifact and coverage counts. A failed or incomplete run cannot establish recovery. Avoid a second producer or repair queue.

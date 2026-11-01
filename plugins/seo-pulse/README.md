@@ -94,4 +94,4 @@ Start with the [example config](skills/seo-pulse/assets/technical.example.json) 
 
 Run the checker from the installed package. The [manual workflow template](skills/seo-pulse/assets/technical.yml) uploads a report without editing the site or opening issues. Review the URL policy and verify a manual run before enabling any schedule.
 
-A separate [scheduled template](skills/seo-pulse/assets/technical-scheduled.yml) runs the same checker after a reviewed commit pin and explicit activation. Shipping the template does not install it or prove an unattended run.
+For automatic reports, add the same pinned command to the site's existing reviewed workflow. Verify an actual scheduled run before relying on delivery.

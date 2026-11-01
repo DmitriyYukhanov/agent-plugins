@@ -164,7 +164,7 @@ def fetch(url, origins, budget=None, deadline=None, read_body=True, link_prefixe
                 current = target
                 continue
             if time.monotonic() >= deadline: raise TimeoutError("Elapsed request budget exhausted")
-            if not read_body:
+            if not read_body or status != 200:
                 return {'final_url':current, 'status':status, 'trace':trace,
                         'headers':list(reply.headers.items()), 'body':''}
             raw = reply.read(LIMIT + 1)

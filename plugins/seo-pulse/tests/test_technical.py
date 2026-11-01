@@ -213,6 +213,18 @@ class TechnicalTests(unittest.TestCase):
             opener.return_value.open.return_value = Reply()
             self.assertEqual(t.collect(config(role='excluded', canonical=None, status=404))['status'], 'pass')
 
+    def test_public_http_failure_survives_unreadable_error_body(self):
+        class Reply:
+            headers = {}
+            def close(self): pass
+            def read(self, *args): raise OSError('Unreadable error body')
+        for status in (404,503):
+            reply = Reply(); reply.code = status
+            with self.subTest(status=status), patch.object(t,'build_opener') as opener, patch.object(t,'public_host'):
+                opener.return_value.open.return_value = reply
+                r = t.collect(config())
+                self.assertTrue(any(f['rule']=='http-status' and f['status']=='fail' for f in r['findings']))
+
     def test_organization_iri_types(self):
         for kind in ['https://schema.org/Organization', ['Thing', 'http://schema.org/Organization']]:
             self.assertTrue(t.organization([json.dumps({'@type': kind})]))
