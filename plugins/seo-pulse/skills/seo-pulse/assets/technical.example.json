@@ -1,0 +1,59 @@
+{
+  "technical": {
+    "origins": [
+      "https://example.com",
+      "http://example.com",
+      "https://www.example.com"
+    ],
+    "sitemap_url": "https://example.com/sitemap.xml",
+    "link_prefixes": ["https://example.com/docs/"],
+    "pages": [
+      {
+        "url": "https://example.com/docs/api/Item.html",
+        "role": "public",
+        "canonical": "https://example.com/docs/api/Item.html",
+        "require_title": true,
+        "article": true,
+        "lang": "en",
+        "check_links": true
+      },
+      {
+        "url": "http://example.com/privacy",
+        "final_url": "https://example.com/privacy",
+        "role": "public",
+        "canonical": "https://example.com/privacy",
+        "required_meta": [
+          "description"
+        ],
+        "group": "privacy"
+      },
+      {
+        "url": "https://example.com/privacy",
+        "role": "public",
+        "canonical": "https://example.com/privacy",
+        "group": "privacy"
+      },
+      {
+        "url": "https://example.com/",
+        "role": "public",
+        "canonical": "https://example.com/",
+        "in_sitemap": true
+      },
+      {
+        "url": "https://example.com/login?next=%2Fcheckout",
+        "role": "nonindexable",
+        "group": "login"
+      },
+      {
+        "url": "https://example.com/showcase/example",
+        "role": "nonindexable",
+        "group": "showcase"
+      },
+      {
+        "url": "https://example.com/reserved",
+        "role": "excluded",
+        "status": 404
+      }
+    ]
+  }
+}
