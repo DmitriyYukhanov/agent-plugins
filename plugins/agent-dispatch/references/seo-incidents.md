@@ -88,7 +88,7 @@ of the local UTC clock. The five-minute allowance also covers the observation-to
 | --- | --- | --- |
 | `http-status` | `{"status":503}`: integer 100 to 599 except 200 | Final HTTP status differs from 200 |
 | `noindex` | `{"noindex":true}` | Robots meta or applicable X-Robots-Tag says noindex/none |
-| `canonical` | `{"canonical":null}` or a raw string of at most 2048 characters | Canonical link in the explicit or implicit head is missing, duplicated, or differs from the pinned string |
+| `canonical` | `{"canonical":null}` for missing or duplicate links; otherwise a differing raw URL string, at most 2048 characters without whitespace or controls | Canonical link in the explicit or implicit head is missing, duplicated, or differs from the pinned string |
 | `robots` | `{"allowed":false}` | The origin's robots.txt blocks Googlebot for the page |
 | `sitemap` | `{"present":false}` | The page URL is absent from the pinned XML sitemap |
 

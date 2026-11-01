@@ -24,9 +24,8 @@ import zipfile
 
 SOURCE = Path(__file__).resolve().parents[1] / "scripts" / "seo_intake.py"
 SPEC = importlib.util.spec_from_file_location("seo_intake", SOURCE)
-seo = importlib.util.module_from_spec(SPEC) if SOURCE.exists() else None
-if seo:
-    SPEC.loader.exec_module(seo)
+seo = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(seo)
 
 NOW = datetime(2026, 10, 27, 12, 0, tzinfo=timezone.utc)
 REPO = "Code-Stage/codestage-website"
@@ -75,9 +74,7 @@ def archive(report):
 
 class IntakeTests(unittest.TestCase):
     def setUp(self):
-        self.assertIsNotNone(seo, "trusted intake adapter is absent")
-        if hasattr(seo, "DEADLINE"):
-            patch.object(seo, "DEADLINE", float("inf")).start()
+        patch.object(seo, "DEADLINE", float("inf")).start()
         self.policy = copy.deepcopy(POLICY)
         self.value = evidence()
         self.current = issue(self.value)
@@ -494,7 +491,7 @@ class IntakeTests(unittest.TestCase):
         with patch.object(sys, "argv", ["seo_intake", "--policy", "policy.json", "--repository", REPO]), \
                 patch.object(Path, "read_bytes", return_value=json.dumps(POLICY).encode()), \
                 patch.object(Path, "write_text") as save, \
-                patch.object(seo, "monotonic", create=True, side_effect=lambda: elapsed[0]), \
+                patch.object(seo, "monotonic", side_effect=lambda: elapsed[0]), \
                 patch.object(seo, "admit_issue", side_effect=admit), \
                 patch.object(sys, "stdout", new_callable=io.StringIO) as output:
             self.assertEqual(0, seo.main())
@@ -503,7 +500,7 @@ class IntakeTests(unittest.TestCase):
             save.assert_not_called()
 
     def test_expired_budget_prevents_gh_mutation(self):
-        with patch.object(seo, "DEADLINE", 0, create=True), \
+        with patch.object(seo, "DEADLINE", 0), \
                 patch.object(subprocess, "run") as command:
             with self.assertRaises(TimeoutError):
                 self.real_api("repos/test/site/issues/7/labels", data={"labels": ["agent"]})

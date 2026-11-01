@@ -419,7 +419,6 @@ def select_evidence(issue: dict, prefix: str, policy: dict, now: datetime) -> di
 
 
 def admit_issue(number: int, policy: dict, now: datetime, *, admit: bool = False) -> str:
-    validate_policy(policy)
     prefix = f"repos/{policy['repository']}/issues/{number}"
     issue = gh_api(prefix)
     value = select_evidence(issue, prefix, policy, now)

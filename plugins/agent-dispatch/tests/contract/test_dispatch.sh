@@ -63,11 +63,13 @@ test_intake_errors_do_not_block_the_owner_queue() {
 test_fake_clock_waits_for_the_cli_readiness_signal() {
   setup_env
   export FAKE_SLEEP_READY="$FIX/ready" FAKE_SLEEP_REAL=0
-  ("$REAL_SLEEP" 0.2; printf 'ready\n' >"$FAKE_SLEEP_READY") &
+  local initial_clock
+  initial_clock=$(cat "$FAKE_CLOCK")
+  ("$REAL_SLEEP" 0.2; cat "$FAKE_CLOCK" >"$FIX/clock-before-ready"; printf 'ready\n' >"$FAKE_SLEEP_READY") &
   local writer=$!
   "$BASH" "$AD_FIXTURES/bin/sleep" 1
-  [ -s "$FAKE_SLEEP_READY" ] || fail "fake time advanced before the launcher was ready"
   wait "$writer"
+  assert_eq "$initial_clock" "$(cat "$FIX/clock-before-ready")" "fake time advanced before the launcher was ready"
 }
 
 test_repeated_setup_keeps_the_real_sleep_executable() {
