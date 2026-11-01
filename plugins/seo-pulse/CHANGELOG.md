@@ -5,6 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-11-01
+
+### Added
+- Check explicit URL, canonical, noindex, metadata and sitemap expectations without Search Console access or site changes.
+
 ## [1.7.0] - 2026-10-28
 
 ### Added

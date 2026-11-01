@@ -137,3 +137,7 @@ Separate contract tests, host activation, real GSC access and unattended CI evid
 For product portfolios, show each product's owned landing/docs scope or the missing
 scope. GSC measures Google Search traffic to those pages; marketplace search,
 store visits, sales and conversion require separate provider evidence.
+
+## Automatic technical checks
+
+For an explicitly requested technical audit, use the bundled [technical checker](references/technical.md) with reviewed URL expectations. This report-only command works without GSC and never changes the site or measurement holds. Keep missing collection evidence separate from confirmed regressions. A manual workflow template does not enable a schedule or repair queue.

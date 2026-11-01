@@ -1,0 +1,45 @@
+name: Scheduled technical SEO report
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      plugin_ref:
+        description: Reviewed Agent Plugins commit or release tag
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require an owner-reviewed plugin commit
+        env:
+          PULSE_COMMIT: ${{ inputs.plugin_ref || vars.SEO_PULSE_COMMIT }}
+        run: |
+          if [[ ! "$PULSE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Set SEO_PULSE_COMMIT to a reviewed full commit SHA before activation." >&2
+            exit 2
+          fi
+      - uses: actions/checkout@v4
+        with:
+          path: site
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: DmitriyYukhanov/agent-plugins
+          ref: ${{ inputs.plugin_ref || vars.SEO_PULSE_COMMIT }}
+          path: pulse
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check reviewed public URL expectations
+        run: python pulse/plugins/seo-pulse/skills/seo-pulse/scripts/technical.py --config site/.claude/seo-pulse.json > technical-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: technical-seo-report
+          path: technical-report.json
+          if-no-files-found: warn

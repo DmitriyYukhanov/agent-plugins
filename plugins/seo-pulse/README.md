@@ -85,3 +85,11 @@ defines the full workflow.
 
 Local tests use a fake API transport. Verify actual host activation, GSC access
 and first unattended delivery separately before relying on recurring reports.
+
+## Check known public routes automatically
+
+The [technical checker](skills/seo-pulse/references/technical.md) verifies an explicit URL list against reviewed redirect, canonical, noindex, metadata and sitemap expectations. It needs Python 3.11+ and public HTTP access, without GSC or GitHub credentials. It reports failures and incomplete collection separately.
+
+Start with the [example config](skills/seo-pulse/assets/technical.example.json) and run the checker from the installed package. The [manual workflow template](skills/seo-pulse/assets/technical.yml) uploads a report without editing the site or opening issues. Review the URL policy and verify a manual run before enabling any schedule.
+
+A separate [scheduled template](skills/seo-pulse/assets/technical-scheduled.yml) runs the same checker after a reviewed commit pin and explicit activation. Shipping the template does not install it or prove an unattended run.
