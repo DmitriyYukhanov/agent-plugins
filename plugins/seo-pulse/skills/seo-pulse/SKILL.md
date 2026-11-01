@@ -27,6 +27,23 @@ If ownership or scope remains unclear, report the missing evidence and stop that
 site. Propose the project config without writing it, creating issues or enabling a
 schedule. Interactive assessment needs no GitHub report issue or label.
 
+## Project context
+
+Before choosing a candidate, reuse project instructions, routes, the SEO log and
+product documents for the product, buyer/task, market/language, current goal,
+verified features and limits, proof, and documented competitors. Keep source links
+and read dates. Mark gaps and conflicts unknown; continue independent checks and
+defer conclusions that depend on those facts. Explain how the query and current
+page fit the buyer task and goal. Goals do not prove conversions; competitor
+content does not prove product claims.
+
+If useful, propose an optional `docs/seo/context.md` linking those sources. Do not
+require it or write it during a read-only assessment. Keep credentials and private
+raw evidence outside tracked or public files. Existing destination, data and hold
+checks still apply. Planning from verified facts needs no GSC sample; site edits
+follow the owner's reviewed flow. Standalone content and recorded AI-citation
+requests do not activate this GSC workflow by themselves.
+
 ## Interactive cycle
 
 1. Read each configured SEO log and measurement. Keep the fixed pre-change baseline,
@@ -105,10 +122,18 @@ existing markers before another run; never retry a create blindly.
 
 ## Report
 
-Give each site's clicks, impressions, CTR and position with baseline dates, page
-scope, data limits, due measurements and the one decision. "Wait" is a complete
-outcome. Link signal issues or a PR when one exists. Separate contract tests,
-host activation, real GSC access and unattended CI evidence.
+Keep each site's interactive decision compact and distinguish:
+
+- Observation: source, read date/window, exact scope, data state and limits;
+  clicks, impressions, CTR, position, baseline dates and due checks.
+- Interpretation: query/page/product/buyer fit with the goal; label inference
+  and unknowns, including unavailable business outcomes.
+- Proposal or wait: the smallest supported change, or reason and missing evidence.
+- Verification: completed checks, remaining gaps and the next evidence check.
+  Observed movement does not prove causation.
+
+"Wait" is a complete outcome. Link signal issues or a PR when one exists.
+Separate contract tests, host activation, real GSC access and unattended CI evidence.
 For product portfolios, show each product's owned landing/docs scope or the missing
 scope. GSC measures Google Search traffic to those pages; marketplace search,
 store visits, sales and conversion require separate provider evidence.
