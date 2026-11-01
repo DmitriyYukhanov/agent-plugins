@@ -152,3 +152,18 @@ test_bad_calls_degrade() {
   run_script bots.sh reply T1
   assert_rc 4
 }
+
+
+test_wait_refuses_a_symlinked_budget_file() {
+  bots_setup
+  local state outside
+  state="$(run_dir_of "$REPO" feat/issue-6-x)/bots" outside="$TEST_TMPDIR/outside"
+  mkdir -p "$(dirname "$state")"
+  printf 'keep\n' >"$outside"
+  MSYS=winsymlinks:nativestrict ln -s "$outside" "$state" || fail "native symlink fixture unavailable"
+  fx status@0 $'success\tReview completed'
+  run_script bots.sh wait 12
+  assert_rc 2
+  assert_key "$OUT" STOP_REASON unsafe-state-dir
+  assert_eq keep "$(cat "$outside")"
+}

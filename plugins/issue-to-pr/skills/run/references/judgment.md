@@ -14,13 +14,13 @@ moved it.
 Gates, the security overlay and the external-claim check run at every tier, always. Signals,
 strongest first:
 
-- **complex:** new behavior rather than a change to behavior that exists, or several
-  checklist items, or several existing paths in scope, or a `design` / `ux` / `breaking` label.
-- **trivial:** a copy or config change, short, one path at most, no `feature` / `design` label.
+- **complex:** breaking contracts, interacting subsystem changes, or changes to authorization,
+  payments, destructive operations or migrations that need a design and independent review.
+- **trivial:** bounded copy or config edits without behavior or policy changes.
 - **standard:** everything else, and the answer whenever the signals disagree.
 
-Tier what the run will actually do: a scope the conversation widened past the issue text tiers on
-the wider scope.
+Tier the actual behavioral risk, not the number of checklist items or files. Related tests,
+documentation and version bookkeeping do not raise the tier. A widened scope is assessed again.
 
 Depth describes review coverage, not a model ID or a required tool parameter. Respect the host's
 model settings. At every depth trace changed behavior through its callers; increase independent
@@ -64,21 +64,20 @@ Under `--headless` every moment is a GitHub comment: `R/headless.md`.
 A question is for the user (`kind: asked`) only when it is **preference-bound** — public API
 naming, user-visible UX/copy, paid or external resources, a new external dependency or license, or
 a breaking API/schema change — or **gate-critical unresolvable**, meaning no test command is
-detectable and the gates cannot run. Everything else is decided autonomously (`kind: auto`) and
-logged. Forbidden: proceeding past the checkpoint with a gate-critical unknown, and asking
+detectable and the gates cannot run. Decide everything else autonomously; record material
+decisions as `kind: auto`. Forbidden: proceeding past the checkpoint with a gate-critical unknown, and asking
 mid-implementation anything that fits moment (1).
 
 ## Ledger
 
-One entry per judgment call: `{question, decision, rationale, kind: asked|auto}`, written to
-`<RUN_DIR>/ledger.md` **before the next tool call**, so a compaction cannot lose it. Initialize
+Record material scope, behavior, compatibility and validation decisions as
+`{question, decision, rationale, kind: asked|auto}` in `<RUN_DIR>/notes.md`; routine mechanical
+choices need no entry. Save asked items before the next tool call so compaction cannot lose them. Initialize
 `RUN_DIR` with `S/state.sh` before writing. Before the owned branch exists, use the unique OS-temp
 directory described in the run skill, retain its absolute path, then move the ledger into
-`RUN_DIR` without overwriting earlier entries. Only the `auto` entries render, as a
-**"Decisions made autonomously"** section in both the Step 7 report and the PR body, so the wrong
-`kind` means the entry never reaches its reader. A long run does compact: afterwards `git status`,
-`gh pr view` and the gate logs under `.claude/issue-to-pr/` in the main checkout say where it
-stopped, and they outrank recollection.
+`RUN_DIR` without overwriting earlier entries. Summarize relevant `auto` entries in the report
+and PR body when they affect review. After compaction, `git status`, `gh pr view` and the
+notes and current gate logs in `RUN_DIR` outrank recollection.
 
 ## Two entries always owed
 

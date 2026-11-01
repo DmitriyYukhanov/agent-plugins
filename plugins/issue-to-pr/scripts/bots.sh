@@ -99,6 +99,7 @@ cmd_wait() {
   if ! ensure_run_dir "$root" "$pr_branch"; then
     degrade state-unwritable "bots: cannot write $state"
   fi
+  [ ! -L "$state" ] || stop unsafe-state-dir "bots: $state is a symlink; refusing redirected wait state"
   since=$(now)
   # one budget per head, shared by every call, and the Codex request it already made
   if [ -f "$state" ] && read -r h s i <"$state" && [ "$h" = "$head" ]; then since=$s rid=$i; fi

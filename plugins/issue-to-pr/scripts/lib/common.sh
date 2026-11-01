@@ -69,18 +69,35 @@ ensure_state_dir() { # default ignore for the state root; preserve project-owned
   return 0
 }
 
-branch_dir() { # root branch -> the directory one run owns (receipt, gate logs)
-  # -- and -s encode dash and slash; run- keeps old branch-* state out of cleanup.
+runtime_dir() { # Git metadata is shared by the main checkout, linked worktrees, and bare clones.
+  local common
+  common=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 1
+  printf '%s/issue-to-pr' "$common"
+}
+
+legacy_branch_dir() {
   printf '%s/run-%s' "$(state_dir "$1")" "$(printf '%s' "$2" | sed 's/-/--/g; s|/|-s|g')"
 }
 
+branch_dir() { # Reuse active legacy runs until cleanup; new runs stay outside the source tree.
+  local legacy runtime
+  legacy=$(legacy_branch_dir "$1" "$2")
+  if [ -e "$legacy" ] || [ -L "$legacy" ]; then printf '%s' "$legacy"; return 0; fi
+  runtime=$(runtime_dir "$1") || return 1
+  printf '%s/%s' "$runtime" "${legacy##*/}"
+}
+
 assert_run_dir_safe() { # checkout branch [ref]: refuse redirected or versioned run state
-  local dir tracked
+  local dir tracked runtime legacy
   local query=(ls-files)
-  if [ -L "$1/.claude" ] || [ -L "$(state_dir "$1")" ] || [ -L "$(branch_dir "$1" "$2")" ]; then
+  legacy=$(legacy_branch_dir "$1" "$2")
+  runtime=$(runtime_dir "$1") || stop state-unreadable "issue-to-pr: cannot locate Git metadata in $1"
+  if [ -L "$1/.claude" ] || [ -L "$(state_dir "$1")" ] ||
+    [ -L "$legacy" ] || [ -L "$runtime" ] ||
+    [ -L "$runtime/${legacy##*/}" ]; then
     stop unsafe-state-dir "issue-to-pr: a state path in $1 is a symlink; refusing writes or cleanup outside its owned directory."
   fi
-  dir=".claude/issue-to-pr/$(basename "$(branch_dir "$1" "$2")")"
+  dir=".claude/issue-to-pr/${legacy##*/}"
   [ -z "${3:-}" ] || query=(ls-tree -r --name-only "$3")
   tracked=$(git -C "$1" "${query[@]}" -- "$dir") ||
     stop state-unreadable "issue-to-pr: cannot inspect tracked run state in $1 ${3:-index}"
@@ -92,8 +109,13 @@ assert_run_dir_safe() { # checkout branch [ref]: refuse redirected or versioned 
 
 ensure_run_dir() { # root branch: protect the existing run namespace before any artifact write
   local dir gi
-  dir=$(branch_dir "$1" "$2") gi="$dir/.gitignore"
   assert_run_dir_safe "$1" "$2"
+  dir=$(branch_dir "$1" "$2") || return 1
+  if [ "$dir" != "$(legacy_branch_dir "$1" "$2")" ]; then
+    mkdir -p "$dir" 2>/dev/null
+    return $?
+  fi
+  gi="$dir/.gitignore"
   ensure_state_dir "$(state_dir "$1")" || return 1
   mkdir -p "$dir" 2>/dev/null || return 1
   [ ! -L "$gi" ] || return 1
@@ -118,6 +140,7 @@ receipt_write() { # root branch head_sha gates
   local dir
   dir=$(branch_dir "$1" "$2")
   ensure_run_dir "$1" "$2" || return 1
+  [ ! -L "$dir/receipt.json" ] || return 1
   printf '{"branch":"%s","head_sha":"%s","gates":"%s","created_at":"%s"}\n' \
     "$(json_escape "$2")" "$(json_escape "$3")" "$(json_escape "$4")" \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$dir/receipt.json"

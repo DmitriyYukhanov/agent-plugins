@@ -31,7 +31,12 @@ test_state_fresh_run_is_ignored_before_any_gate() {
   state_repo
   run_script state.sh
   assert_rc 0
-  assert_key "$OUT" RUN_DIR "$(run_dir_of "$REPO" feat/issue-6-x)"
+  local expected
+  expected="$(git rev-parse --path-format=absolute --git-common-dir)/issue-to-pr/run-feat-sissue--6--x"
+  assert_key "$OUT" RUN_DIR "$expected"
+  [ -d "$expected" ] || fail "metadata run directory missing"
+  [ ! -e "$REPO/.claude" ] || fail "new run created source-tree state"
+  [ ! -e "$expected/.gitignore" ] || fail "metadata run created an unnecessary ignore file"
   write_run_artifacts "$(run_dir_of "$REPO" feat/issue-6-x)"
   assert_only_project_files_stage "$REPO"
 }
@@ -89,7 +94,7 @@ test_state_preserves_an_empty_tracked_ignore() {
 test_state_refuses_tracked_run_files_without_touching_them() {
   state_repo
   local d
-  d=$(run_dir_of "$REPO" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
   mkdir -p "$d"
   printf 'keep\n' >"$d/ledger.md"
   git add .claude/issue-to-pr
@@ -127,7 +132,7 @@ test_state_refuses_detached_head() {
 test_state_repairs_existing_run_ignore_once() {
   state_repo
   local d first
-  d=$(run_dir_of "$REPO" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
   mkdir -p "$d"
   printf '# custom parent\n!run-*/\n' >"$REPO/.claude/issue-to-pr/.gitignore"
   git add .claude/issue-to-pr/.gitignore
@@ -175,6 +180,59 @@ test_state_refuses_symlinked_state_ancestors_before_writing() {
     assert_rc 2
     assert_key "$OUT" STOP_REASON unsafe-state-dir
     assert_eq sentinel "$(ls -A "$outside")" "bootstrap wrote through the symlink"
+    assert_eq keep "$(cat "$outside/sentinel")"
+    rm "$link"
+  done
+}
+
+test_state_reuses_legacy_active_run_and_preserves_config() {
+  state_repo
+  local legacy="$REPO/.claude/issue-to-pr/run-feat-sissue--6--x"
+  mkdir -p "$legacy"
+  printf 'existing receipt\n' >"$legacy/receipt.json"
+  printf 'human_paths: protected/**\n' >"$REPO/.claude/issue-to-pr/config.md"
+  run_script state.sh
+  assert_rc 0
+  assert_key "$OUT" RUN_DIR "$legacy"
+  assert_eq 'existing receipt' "$(cat "$legacy/receipt.json")"
+  assert_eq 'human_paths: protected/**' "$(cat "$REPO/.claude/issue-to-pr/config.md")"
+  [ ! -e "$REPO/.git/issue-to-pr" ] || fail "legacy run was duplicated"
+}
+
+test_state_bare_clone_worktrees_share_git_metadata() {
+  local seed bare one two common
+  seed=$(init_repo "$TEST_TMPDIR/seed")
+  bare="$TEST_TMPDIR/bare.git" one="$TEST_TMPDIR/one" two="$TEST_TMPDIR/two"
+  git clone -q --bare "$seed" "$bare"
+  git -C "$bare" worktree add -qb feat/one "$one" main
+  git -C "$bare" worktree add -qb feat/two "$two" main
+  common=$(git -C "$one" rev-parse --path-format=absolute --git-common-dir)
+  cd "$one" || fail "could not enter first worktree"
+  run_script state.sh
+  assert_rc 0
+  assert_key "$OUT" RUN_DIR "$common/issue-to-pr/run-feat-sone"
+  cd "$two" || fail "could not enter second worktree"
+  run_script state.sh
+  assert_rc 0
+  assert_key "$OUT" RUN_DIR "$common/issue-to-pr/run-feat-stwo"
+  [ ! -e "$one/.claude" ] && [ ! -e "$two/.claude" ] && [ ! -e "$bare/.claude" ] ||
+    fail "bare clone bootstrap created source-tree state"
+}
+
+test_state_refuses_symlinked_metadata_paths_before_writing() {
+  state_repo
+  local common rel link outside n=0
+  common=$(git rev-parse --path-format=absolute --git-common-dir)
+  for rel in issue-to-pr issue-to-pr/run-feat-sissue--6--x; do
+    n=$((n + 1))
+    outside="$TEST_TMPDIR/outside-$n" link="$common/$rel"
+    mkdir -p "$outside" "$(dirname "$link")"
+    MSYS=winsymlinks:nativestrict ln -s "$outside" "$link" || fail "native symlink fixture unavailable"
+    printf 'keep\n' >"$outside/sentinel"
+    run_script state.sh
+    assert_rc 2
+    assert_key "$OUT" STOP_REASON unsafe-state-dir
+    assert_eq sentinel "$(ls -A "$outside")"
     assert_eq keep "$(cat "$outside/sentinel")"
     rm "$link"
   done

@@ -7,9 +7,8 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 # gates.sh <name> <command> [<name> <command> ...]
 # Each command is its own argument, so nothing here has to split or unquote a packed value.
-# Runs them in order in the current checkout, logs each under the branch's run directory in
-# the main checkout, stops at the first red one, and on all green writes the receipt the merge
-# checks (branch, HEAD sha, gate names).
+# Runs commands in order in the current checkout, logs in the branch's owned run directory,
+# and stops at the first red gate. All green writes the merge receipt (branch, HEAD, gate names).
 if [ "$#" -eq 0 ] || [ $(($# % 2)) -ne 0 ]; then
   degrade bad-arguments "gates: expected name/command pairs, got $# arguments"
 fi
@@ -36,11 +35,17 @@ fi
 [ "$branch" != HEAD ] ||
   degrade detached-head "gates: this checkout is detached, so there is no branch to key the receipt to. Check the feature branch out first."
 log_dir="$(branch_dir "$root" "$branch")/logs"
+[ ! -L "$log_dir" ] || stop unsafe-state-dir "gates: $log_dir is a symlink; refusing redirected logs"
 if ! ensure_run_dir "$root" "$branch" || ! mkdir -p "$log_dir" 2>/dev/null; then
   degrade log-dir-unwritable "gates: cannot create $log_dir"
 fi
 
-ts=$(date +%Y%m%d-%H%M%S)
+receipt=$(receipt_path "$root" "$branch")
+[ ! -L "$receipt" ] || stop unsafe-state-dir "gates: $receipt is a symlink; refusing redirected receipts"
+if [ -f "$receipt" ]; then
+  rm -f "$receipt" 2>/dev/null || degrade receipt-unwritable "gates: cannot invalidate $receipt before running gates"
+fi
+
 names=""
 while [ "$#" -gt 0 ]; do
   name=$1
@@ -48,7 +53,8 @@ while [ "$#" -gt 0 ]; do
   shift 2
   key=$(gate_key "$name")
   slug=$(printf '%s' "$key" | tr '[:upper:]' '[:lower:]')
-  logf="$log_dir/$slug-$ts.log"
+  logf="$log_dir/$slug.log"
+  [ ! -L "$logf" ] || stop unsafe-state-dir "gates: $logf is a symlink; refusing redirected logs"
   bash -c "$cmd" >"$logf" 2>&1
   rc=$?
   emit "GATE_${key}_EXIT" "$rc"
