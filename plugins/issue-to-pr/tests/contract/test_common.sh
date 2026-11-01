@@ -38,8 +38,26 @@ test_common_state_dir_ignores_itself_and_keeps_a_hand_edited_rule() {
 
 test_common_branch_dir_never_gives_two_branches_one_directory() {
   source "$ITP_SCRIPTS/lib/common.sh"
-  [ "$(branch_dir /r a/-b)" != "$(branch_dir /r a-/b)" ] ||
+  local root
+  root=$(init_repo)
+  [ "$(branch_dir "$root" a/-b)" != "$(branch_dir "$root" a-/b)" ] ||
     fail "two branch names share run state, which cleanup would delete"
-  [ "$(branch_dir /r a/b)" != /r/.claude/issue-to-pr/branch-a-sb ] ||
+  [ "$(branch_dir "$root" a/b)" != "$root/.claude/issue-to-pr/branch-a-sb" ] ||
     fail "new state overlaps another branch's legacy directory"
+}
+
+
+test_common_receipt_write_refuses_a_symlink_target() {
+  source "$ITP_SCRIPTS/lib/common.sh"
+  local root target receipt rc
+  root=$(init_repo)
+  target="$TEST_TMPDIR/outside.json"
+  receipt="$(branch_dir "$root" main)/receipt.json"
+  mkdir -p "$(dirname "$receipt")"
+  printf 'keep\n' >"$target"
+  MSYS=winsymlinks:nativestrict ln -s "$target" "$receipt" || fail "native symlink fixture unavailable"
+  receipt_write "$root" main sha test
+  rc=$?
+  assert_eq 1 "$rc" "receipt write must refuse an external target"
+  assert_eq keep "$(cat "$target")"
 }

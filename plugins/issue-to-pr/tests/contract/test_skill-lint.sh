@@ -122,7 +122,7 @@ test_report_names_fixes_without_regression_tests_at_every_tier() {
   local report
   report=$(skill_step 'PR and report')
   assert_contains "$report" 'findings fixed without regression tests' "the report must expose missing regression coverage"
-  assert_contains "$report" 'or none' "the report must explicitly account for an empty exception list"
+  assert_contains "$report" 'when any' "exceptions must be reported when present without requiring an empty section"
   assert_contains "$report" 'with reasons' "each missing regression must have a reason"
   assert_contains "$report" 'report and PR body at every tier' "short reports and the PR body must retain the exceptions"
 }

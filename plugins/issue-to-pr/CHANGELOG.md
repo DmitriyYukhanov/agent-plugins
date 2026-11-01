@@ -5,6 +5,12 @@ All notable changes to the **issue-to-pr** plugin will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [9.12.0] - 2026-11-02
+
+### Changed
+- Keep new run state outside source files and reuse current logs, notes and inventories.
+- Choose review depth by behavioral risk rather than checklist length or file count.
+
 ## [9.11.0] - 2026-11-01
 
 ### Added

@@ -66,8 +66,8 @@ configured `auto_merge_limits` require owner review.
 - **Autonomous, one checkpoint max.** Three moments: one batched question mid-run (only if
   something needs your preference), the merge gate, and hard stops. `--grill` spends that first
   moment on `grilling` instead, which works the design in rounds of numbered decisions until
-  nothing is left silently assumed. Every other decision it makes itself, logs, and surfaces in
-  the report and PR body.
+  nothing is left silently assumed. Other choices are autonomous; only material decisions
+  need a note and a relevant review summary.
 - **Gates.** Design hardening (cross-review or a multi-agent fallback), tests green
   (typecheck + tests, plus visual checks for UI work), and a code-review loop that runs
   until clean within the tier's pass cap. Review depth escalates when a pass confirms two or
@@ -117,16 +117,11 @@ only: a diff touching `human_paths` never merges unattended (glob syntax in
 `skills/run/references/configuration.md`); `after_merge` is the instruction the run gives itself
 after cleanup, usually a deploy skill.
 
-Claude Code and Codex use this same config and state directory; the `.claude` name is retained
-for compatibility. There is no separate Codex config to keep in sync.
-
-That directory holds the plugin's state: the config, and one folder per branch with its gate
-receipt and gate logs. It ships its own `.gitignore` containing `*`, so none of it reaches
-`git status` and your project's `.gitignore` is left alone. Runs keep their state in the main
-checkout, never in the worktree, so tearing the worktree down can never trip over it.
-
-Being ignored, the directory is disposable to `git clean -x`. Nothing breaks permanently: the
-commands get worked out again, and the next merge asks for one more gate run before it lands.
+Hosts share this project config. New runtime state lives in
+`<git-common-dir>/issue-to-pr/run-<branch>/`, outside the source tree and shared by worktrees.
+The branch component is encoded. Existing `.claude/issue-to-pr/run-*` runs continue in place
+until cleanup; config and custom ignore rules stay unchanged. Logs keep the latest result per
+gate. Reuse one notes file and one draft body rather than accumulating copies.
 
 ### Staging review
 
@@ -159,7 +154,8 @@ group above 10 MiB. Reasons are exact `path<TAB>one-line explanation` rows in a 
 `--reasons` when none are needed. A missing reason unstages that flagged path and stops with
 exit 2. Generated issue-to-pr run state cannot be committed, even with a reason.
 Policy patterns ignore case so Windows path variants cannot bypass these checks.
-The Markdown inventory is saved as `staging-report.md` in the run directory for the PR and report.
+The current inventory is saved as `staging-report.md`; replace it in the PR after fixes.
+Empty groups and zero indicators are omitted; file flags and explanations share one review column.
 
 ### Review bots (optional)
 

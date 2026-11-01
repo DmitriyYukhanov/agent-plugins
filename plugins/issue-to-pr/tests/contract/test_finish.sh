@@ -200,7 +200,7 @@ test_cleanup_refuses_a_dirty_worktree() {
 test_cleanup_preserves_tracked_run_state_before_removing_anything() {
   cleanup_setup pr-merged
   local d
-  d=$(run_dir_of "$REPO" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
   mkdir -p "$d"
   printf 'keep\n' >"$d/ledger.md"
   git add .claude/issue-to-pr
@@ -216,7 +216,7 @@ test_cleanup_preserves_tracked_run_state_before_removing_anything() {
 test_cleanup_preserves_a_tracked_file_at_the_run_directory_path() {
   cleanup_setup pr-merged
   local d
-  d=$(run_dir_of "$REPO" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
   mkdir -p "$(dirname "$d")"
   printf 'keep\n' >"$d"
   git add .claude/issue-to-pr
@@ -231,7 +231,7 @@ test_cleanup_preserves_a_tracked_file_at_the_run_directory_path() {
 test_cleanup_rechecks_tracked_run_state_after_switching_in_place() {
   cleanup_setup pr-merged
   local d
-  d=$(run_dir_of "$REPO" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
   mkdir -p "$d"
   printf 'keep\n' >"$d/ledger.md"
   git add .claude/issue-to-pr
@@ -250,7 +250,7 @@ test_cleanup_rechecks_tracked_run_state_after_switching_in_place() {
 test_cleanup_preserves_tracked_run_state_on_a_branch_without_a_worktree() {
   cleanup_setup pr-merged
   local d
-  d=$(run_dir_of "$WT" feat/issue-6-x)
+  d=$(legacy_run_dir_of "$WT" feat/issue-6-x)
   mkdir -p "$d"
   printf 'keep\n' >"$d/ledger.md"
   git -C "$WT" add .claude/issue-to-pr
@@ -274,7 +274,7 @@ test_cleanup_refuses_symlinks_before_removing_external_state() {
     mkdir -p "$outside" "$(dirname "$link")"
     MSYS=winsymlinks:nativestrict ln -s "$outside" "$link" || fail "native symlink fixture unavailable"
     [ -L "$link" ] || fail "the symlink fixture is not a symlink"
-    d=$(run_dir_of "$REPO" feat/issue-6-x)
+    d=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
     mkdir -p "$d"
     printf 'keep\n' >"$d/ledger.md"
     run_script finish.sh cleanup 6 --branch feat/issue-6-x
@@ -557,6 +557,7 @@ test_human_paths_value_may_be_commented() {
 
 test_human_paths_in_a_crlf_config_still_match() {
   merge_setup happy
+  mkdir -p "$REPO/.claude/issue-to-pr"
   printf -- '---\r\nhuman_paths: work.txt\r\n---\r\n' >"$REPO/.claude/issue-to-pr/config.md"
   assert_human_path_blocks_merge "a CR on the last glob defeated it"
 }
@@ -580,6 +581,7 @@ test_human_paths_with_quotes_is_refused() {
 test_human_paths_as_a_yaml_list_is_refused() {
   local v
   merge_setup happy
+  mkdir -p "$REPO/.claude/issue-to-pr"
   for v in '' '[work.txt]' '- work.txt'; do
     printf -- '---\nhuman_paths: %s\n  - work.txt\n---\n' "$v" >"$REPO/.claude/issue-to-pr/config.md"
     run_script finish.sh merge 6 --branch feat/issue-6-x --auto trivial --tier trivial
@@ -964,4 +966,19 @@ test_limits_do_not_block_an_explicit_owner_merge() {
   run_script finish.sh merge 6 --branch feat/issue-6-x
   assert_rc 0
   assert_key "$OUT" MERGED true
+}
+
+
+test_cleanup_removes_only_the_owned_legacy_run() {
+  cleanup_setup pr-merged
+  local owned other
+  owned=$(legacy_run_dir_of "$REPO" feat/issue-6-x)
+  other=$(legacy_run_dir_of "$REPO" feat/other)
+  mkdir -p "$owned" "$other"
+  printf 'owned\n' >"$owned/receipt.json"
+  printf 'keep\n' >"$other/receipt.json"
+  run_script finish.sh cleanup 6 --branch feat/issue-6-x
+  assert_rc 0
+  [ ! -e "$owned" ] || fail "the owned legacy run survived cleanup"
+  assert_eq keep "$(cat "$other/receipt.json")"
 }

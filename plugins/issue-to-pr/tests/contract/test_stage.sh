@@ -15,6 +15,21 @@ stage_report() {
   cat "$file"
 }
 
+test_stage_report_omits_empty_groups_and_indicators() {
+  stage_repo
+  printf 'changed\n' >README.md
+  printf 'README.md\n' >"$PLAN"
+  run_script stage.sh review --plan "$PLAN" -- README.md
+  assert_rc 0
+  local report
+  report=$(stage_report)
+  assert_contains "$report" '| source | 1 | 8 |'
+  assert_contains "$report" '<code>README.md</code> | source | 8 |'
+  assert_not_contains "$report" '| tests | 0 |'
+  assert_not_contains "$report" 'binaries 0 files'
+  assert_not_contains "$report" 'none |'
+}
+
 test_stage_cannot_hide_undeclared_gitlinks_with_git_configuration() {
   stage_repo
   git update-index --add --cacheinfo "160000,$(git rev-parse HEAD),hidden"

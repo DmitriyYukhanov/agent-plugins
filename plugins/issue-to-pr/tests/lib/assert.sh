@@ -116,8 +116,15 @@ init_repo() {
   printf '%s' "$dir"
 }
 
-run_dir_of() { # root branch -> the one directory a run owns
+legacy_run_dir_of() {
   printf '%s/.claude/issue-to-pr/run-%s' "$1" "$(printf '%s' "$2" | sed 's/-/--/g; s|/|-s|g')"
+}
+
+run_dir_of() { # root branch -> the active legacy run, or shared Git metadata.
+  local legacy
+  legacy=$(legacy_run_dir_of "$1" "$2")
+  if [ -e "$legacy" ] || [ -L "$legacy" ]; then printf '%s' "$legacy"; return 0; fi
+  printf '%s/issue-to-pr/%s' "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)" "$(basename "$legacy")"
 }
 
 receipt_file() { printf '%s/receipt.json' "$(run_dir_of "$1" "$2")"; }

@@ -172,19 +172,22 @@ html_text() {
 }
 missing=()
 {
-  printf "## What's in the commit\n\n%d files, %d indexed bytes. Deleted files contribute zero bytes.\n\n" "${#paths[@]}" "$total_bytes"
+  printf "## What's in the commit\n\n%d files, %d indexed bytes.\n\n" "${#paths[@]}" "$total_bytes"
   printf '| Group | Files | Bytes |\n| --- | ---: | ---: |\n'
   for ((i = 0; i < ${#groups[@]}; i++)); do
+    [ "${counts[$i]}" -gt 0 ] || continue
     printf '| %s | %d | %d |\n' "${groups[$i]}" "${counts[$i]}" "${totals[$i]}"
   done
-  printf '\nOverlapping indicators: binaries %d files / %d bytes; new files %d / %d bytes.\n' "$binary_count" "$binary_bytes" "$new_count" "$new_bytes"
-  printf '\nGroups above 10485760 bytes require a reason for every member.\n\n'
-  printf '| File | Group | Bytes | Flags | Reason |\n| --- | --- | ---: | --- | --- |\n'
+  [ "$binary_count" -eq 0 ] || printf '\nbinaries %d files / %d bytes.\n' "$binary_count" "$binary_bytes"
+  [ "$new_count" -eq 0 ] || printf '\nnew files %d / %d bytes.\n' "$new_count" "$new_bytes"
+  printf '\n| File | Group | Bytes | Review |\n| --- | --- | ---: | --- |\n'
   for ((i = 0; i < ${#paths[@]}; i++)); do
     group=${file_groups[$i]}
     [ "${totals[$group]}" -le 10485760 ] || flags[i]="${flags[$i]:+${flags[$i]}, }large-group"
     if [ -n "${flags[$i]}" ] && [ -z "${explanations[$i]}" ]; then missing+=("${paths[$i]}"); fi
-    printf '| <code>%s</code> | %s | %d | %s | %s |\n' "$(html_text "${paths[$i]}")" "${groups[$group]}" "${sizes[$i]}" "${flags[$i]:-none}" "$(html_text "${explanations[$i]}")"
+    note=${flags[$i]}
+    [ -z "${explanations[$i]}" ] || note="${note:+$note: }${explanations[$i]}"
+    printf '| <code>%s</code> | %s | %d | %s |\n' "$(html_text "${paths[$i]}")" "${groups[$group]}" "${sizes[$i]}" "$(html_text "${note:--}")"
   done
 } >"$stage_tmp/report"
 [ "$(git write-tree)" = "$tree" ] || stop index-changed 'stage: index changed during review; repeat the audit'

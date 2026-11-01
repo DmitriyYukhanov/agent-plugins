@@ -53,9 +53,14 @@ test_gates_refuse_a_variable_name_passed_instead_of_the_command() {
 
 test_gates_refuse_an_odd_argument_count() {
   gates_repo
+  run_script gates.sh test true
+  assert_rc 0
+  local previous
+  previous=$(cat "$(receipt_file "$REPO" feat/issue-6-x)")
   run_script gates.sh test true stray
   assert_rc 4
   assert_not_contains "$OUT" GATE_TEST_EXIT
+  assert_eq "$previous" "$(cat "$(receipt_file "$REPO" feat/issue-6-x)")"
 }
 
 test_gates_refuse_a_detached_head() {
@@ -73,15 +78,15 @@ gates_worktree() { # name -> cwd moves into a worktree of REPO on feat/issue-6-x
   cd "$WT" || fail "could not enter the worktree"
 }
 
-test_gates_log_lands_in_the_main_checkout_and_nothing_in_the_worktree() {
+test_gates_log_lands_in_shared_metadata_and_nothing_in_the_worktree() {
   local repo wt
   gates_worktree repo
   repo=$REPO wt=$WT
   run_script gates.sh hello 'echo hi-there'
   assert_rc 0
   [ ! -e "$wt/.claude" ] || fail "a gate run left state inside the worktree, which git worktree remove then refuses"
-  assert_contains "$(cat "$(run_dir_of "$repo" feat/issue-6-x)"/logs/hello-*.log)" hi-there
-  assert_contains "$(cat "$repo/.claude/issue-to-pr/.gitignore")" '*' "the state directory must ignore itself"
+  assert_contains "$(cat "$(run_dir_of "$repo" feat/issue-6-x)"/logs/hello.log)" hi-there
+  [ ! -e "$repo/.claude" ] || fail "a gate run created source-tree state"
 }
 
 test_gates_run_from_a_relocated_plugin_path_with_spaces() {
@@ -92,7 +97,7 @@ test_gates_run_from_a_relocated_plugin_path_with_spaces() {
   gates_worktree "repo with spaces"
   run_script gates.sh hello 'echo hi-there'
   assert_rc 0
-  assert_contains "$(cat "$(run_dir_of "$REPO" feat/issue-6-x)"/logs/hello-*.log)" hi-there
+  assert_contains "$(cat "$(run_dir_of "$REPO" feat/issue-6-x)"/logs/hello.log)" hi-there
 }
 
 test_gates_say_so_when_the_receipt_cannot_be_written() {
@@ -111,4 +116,62 @@ test_gates_refuse_a_name_that_sanitizes_to_nothing() {
   assert_key "$OUT" DEGRADED_REASON unnamed-gate
   [ ! -e "$(receipt_file "$REPO" feat/issue-6-x)" ] ||
     fail "the gate would have run and then been missing from the receipt the merge reads"
+}
+
+
+test_gates_replace_the_previous_log_for_the_same_gate() {
+  gates_repo
+  run_script gates.sh 'Unit tests' 'echo previous-output'
+  assert_rc 0
+  local first second count
+  first=$(printf '%s\n' "$OUT" | sed -n 's/^GATE_UNIT_TESTS_LOG=//p')
+  run_script gates.sh 'Unit tests' 'echo latest-output'
+  assert_rc 0
+  second=$(printf '%s\n' "$OUT" | sed -n 's/^GATE_UNIT_TESTS_LOG=//p')
+  assert_eq "$first" "$second" "same gate must replace its previous log"
+  assert_eq unit_tests.log "$(basename "$second")"
+  assert_eq latest-output "$(cat "$second")"
+  count=$(find "$(dirname "$second")" -type f | wc -l | tr -d ' ')
+  assert_eq 1 "$count"
+}
+
+
+test_gates_refuse_redirected_logs_before_running_the_gate() {
+  gates_repo
+  local run logs outside
+  run=$(run_dir_of "$REPO" feat/issue-6-x)
+  logs="$run/logs" outside="$TEST_TMPDIR/outside"
+  mkdir -p "$run" "$outside"
+  printf 'keep\n' >"$outside/test.log"
+  MSYS=winsymlinks:nativestrict ln -s "$outside" "$logs" || fail "native symlink fixture unavailable"
+  run_script gates.sh test 'echo overwritten'
+  assert_rc 2
+  assert_key "$OUT" STOP_REASON unsafe-state-dir
+  assert_eq keep "$(cat "$outside/test.log")"
+}
+
+test_gates_refuse_a_redirected_log_file_before_running_the_gate() {
+  gates_repo
+  local logs outside
+  logs="$(run_dir_of "$REPO" feat/issue-6-x)/logs" outside="$TEST_TMPDIR/outside"
+  mkdir -p "$logs" "$outside"
+  printf 'keep\n' >"$outside/test.log"
+  MSYS=winsymlinks:nativestrict ln -s "$outside/test.log" "$logs/test.log" || fail "native symlink fixture unavailable"
+  run_script gates.sh test 'echo overwritten'
+  assert_rc 2
+  assert_key "$OUT" STOP_REASON unsafe-state-dir
+  assert_eq keep "$(cat "$outside/test.log")"
+}
+
+
+test_gates_a_failed_rerun_revokes_the_previous_green_receipt() {
+  gates_repo
+  run_script gates.sh test true
+  assert_rc 0
+  [ -f "$(receipt_file "$REPO" feat/issue-6-x)" ] || fail "green gate did not create a receipt"
+  run_script gates.sh test 'echo latest-failure; exit 7'
+  assert_rc 1
+  assert_key "$OUT" GATE_TEST_EXIT 7
+  assert_contains "$ERR" latest-failure
+  [ ! -e "$(receipt_file "$REPO" feat/issue-6-x)" ] || fail "failed rerun kept the prior green receipt"
 }
