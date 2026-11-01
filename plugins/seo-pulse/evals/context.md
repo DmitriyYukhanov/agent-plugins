@@ -1,16 +1,11 @@
 # Product context and decision scenarios
 
-Use [the source skill](../skills/seo-pulse/SKILL.md) for the GSC assessment cases.
-For the content and AI-citation trigger cases, start a fresh host session with the
-plugin discoverable and no skill body preloaded. Submit the ordinary prompt and
-observations; record actual skill selection before reading the source to judge
-the answer. If that host check is unavailable, record it as untested.
-
-Give the agent no expected outcome, then compare its actual answer with that
-outcome. Record the source commit or working
-tree hash, host, prompt, actual output and verdict outside tracked project files.
-Record skill selection and invocation separately from file reads. A source-loaded
-rehearsal does not prove installed-host activation, live GSC access or delivery.
+For GSC cases, read [the skill](../skills/seo-pulse/SKILL.md) and use only fixture facts.
+For trigger cases, use a fresh host with the plugin discoverable and no skill
+preloaded; record selection before reading the source. Mark unavailable checks untested.
+Hide expected outcomes from the agent. Record source version, host, prompt,
+actual output and verdict outside tracked files. Keep selection/invocation separate
+from file reads; source-loaded cases do not prove host activation or live delivery.
 
 These are read-only assessments on 2026-10-28. Ownership and source mapping for
 `https://example.com/` and `owner/site` are verified. Unless a case says otherwise,
@@ -36,12 +31,10 @@ the only supported platform, English/UK as the market and qualified trial starts
 as the current goal. They contain no comparative performance benchmark or
 conversion measurements. There is no `docs/seo/context.md`.
 
-Expected: reuse those documents without requiring another file. Separate sourced,
-dated and scoped observations from interpretation, proposal or wait, and
-verification. Relate the broad tutorial query to the product landing and buyer
-task; do not optimise for visitor count alone. Reject the unsupported speed and
-platform claims. A scoped proposal or wait needs a reason and the next evidence
-check. The goal does not prove trial conversions or SEO uplift. Make no edit.
+Expected: reuse those docs without requiring another file. Distinguish dated,
+scoped observations, interpretation, proposal/wait and verification. Judge the
+tutorial query against the product landing and buyer task; reject unsupported
+speed/platform claims. Explain the decision and next check without claiming uplift.
 
 ## Missing context narrows dependent conclusions
 
@@ -59,20 +52,13 @@ small optional `docs/seo/context.md` with source links; never create it during
 this assessment or make it a prerequisite. Do not infer a market from query
 language or invent a competitor advantage.
 
-## A legacy query needs current destination evidence
+## Product goals do not transfer historical metrics
 
-Prompt: "Use SEO Pulse. Our goal is trials, so rename the destination from the
-old URL's weak CTR now."
-
-Observations: the 90-day query row belongs to `https://example.com/cache/`, which
-returns 301 to `/maple-cache/`. The destination's own current GSC evidence is
-unavailable, replacing the successful destination reads above. Product context is
-verified as in the first case; neither URL is held.
-
-Expected: keep the original raw query/URL for exact historical checks. Read the
-current destination and its own evidence; wait on the destination recommendation
-while that evidence is absent. Product fit and the business goal cannot transfer
-historical metrics to a different page.
+Prompt: "Use SEO Pulse. Our goal is trials; rename the destination from the old URL's CTR."
+Observations: first-case context applies. The query row belongs to `/cache/`, which
+redirects to `/maple-cache/`; current destination GSC evidence is unavailable.
+Expected: preserve the raw historical URL, inspect the destination, and wait on
+its recommendation. The business goal cannot transfer metrics between pages.
 
 ## Product fit cannot override unknown data or a hold
 
@@ -89,27 +75,18 @@ not zero or recovery. An active hold keeps its original baseline and check dates
 the rolling comparison cannot replace it. Independent context work may continue,
 but it does not authorise changes or new inbound links to a held page.
 
-## Content planning without GSC
+## Requests that should not start a GSC cycle
 
 Prompt: "Draft a grounded setup-page outline from our verified product docs."
 
-Observations: use the first case's product facts. GSC credentials are unavailable.
-
-Expected: this is a content task, not a positive automatic `seo-pulse` trigger.
-Planning can use verified facts without GSC; identify missing setup details and
-avoid invented steps, benchmarks or demand. This case defines a boundary for a
-later content workflow, not evidence that such a skill is installed. Any later
-site edit still needs its owner's reviewed flow and hold checks.
-
-## One saved AI answer is one observation
+Observations: first-case product facts apply; GSC credentials are unavailable.
+Expected: this alone does not trigger SEO Pulse. Planning may use verified facts
+without GSC; identify missing setup details rather than inventing answers.
 
 Prompt: "This saved AI answer mentions a competitor and omits our product.
 Does it prove our AI visibility dropped?"
 
-Observations: one answer was saved on 2026-10-28 for `cache tools in Unity`.
-There are no repeated observations, earlier baseline or GSC measurements.
-
-Expected: this is an AI-citation task, not a positive automatic `seo-pulse`
-trigger. Describe only the recorded answer's scope and missing evidence. Do not
-claim a trend, universal visibility, conversions or Google Search performance.
-This boundary case does not establish a visibility skill or provider access.
+Observations: one answer saved on 2026-10-28 for `cache tools in Unity`;
+no earlier baseline, repeated observations or GSC measurements.
+Expected: this alone does not trigger SEO Pulse. Describe that observation and
+missing evidence; infer no trend, conversions or Google Search performance.

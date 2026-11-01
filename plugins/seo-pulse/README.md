@@ -26,9 +26,8 @@ You need GSC access and readable current pages. The first assessment can use
 verified temporary scope. For repeat runs, the
 [setup guide](skills/seo-pulse/references/setup.md) covers
 `.claude/seo-pulse.json`, authentication and optional adapters.
-The assessment reuses project and product docs to connect the query to the buyer
-and current goal. Missing facts stay unknown; a context summary is optional and
-is only proposed during a read-only run.
+The assessment reuses product docs to judge buyer fit and the current goal;
+an optional context summary is proposed without writing it during a read-only run.
 Standalone content planning and recorded AI-citation analysis do not activate
 this GSC workflow by themselves.
 

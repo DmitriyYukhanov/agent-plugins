@@ -29,27 +29,20 @@ schedule. Interactive assessment needs no GitHub report issue or label.
 
 ## Project context
 
-Before selecting an opportunity, read existing project instructions, route sources,
-the SEO log and relevant product documents. Reuse them to identify the product,
-buyer and task, target market/language, current goal, verified features and limits,
-proof, and documented competitors. Keep source links and read dates with material
-facts. Competitor pages can suggest questions, but cannot prove your product's
-capabilities. A stated goal is not an observed conversion result.
+Before choosing a candidate, reuse project instructions, routes, the SEO log and
+product documents for the product, buyer/task, market/language, current goal,
+verified features and limits, proof, and documented competitors. Keep source links
+and read dates. Mark gaps and conflicts unknown; continue independent checks and
+defer conclusions that depend on those facts. Explain how the query and current
+page fit the buyer task and goal. Goals do not prove conversions; competitor
+content does not prove product claims.
 
-Mark missing, conflicting or unsupported facts as unknown. Continue independent
-supported checks; defer only conclusions that need those facts. If a reusable
-summary would help, propose a small optional `docs/seo/context.md` with the context
-above and links to authoritative project documents. Prefer links over duplicated
-documentation. Its absence is not a prerequisite failure. During a read-only
-assessment, propose it without writing it. Keep credentials and private raw
-evidence outside tracked or public files.
-
-Use this context to judge whether the query, current page and buyer task serve the
-documented goal. Explain missing product fit instead of chasing traffic alone.
-Context cannot override unknown GSC data, destination checks or measurement holds.
-Content planning from verified facts needs no GSC sample; implementation still
-respects holds and the page owner's reviewed flow. Standalone content requests
-and recorded AI-citation analysis do not activate this GSC workflow by themselves.
+If useful, propose an optional `docs/seo/context.md` linking those sources. Do not
+require it or write it during a read-only assessment. Keep credentials and private
+raw evidence outside tracked or public files. Existing destination, data and hold
+checks still apply. Planning from verified facts needs no GSC sample; site edits
+follow the owner's reviewed flow. Standalone content and recorded AI-citation
+requests do not activate this GSC workflow by themselves.
 
 ## Interactive cycle
 
@@ -129,20 +122,15 @@ existing markers before another run; never retry a create blindly.
 
 ## Report
 
-For each site's interactive assessment, separate these parts:
+Keep each site's interactive decision compact and distinguish:
 
-1. Observation: cite the source and read date or measurement window, exact scope,
-   data state and limits. Include clicks, impressions, CTR and position with
-   baseline dates and due measurements. Keep missing data distinct from zero.
-2. Interpretation: explain the query's fit with the current page, product and
-   buyer task, and how a change could serve the documented goal. Label inference
-   and unknowns; search metrics alone do not establish business results.
-3. Proposal or wait: give the smallest supported change or the reason to wait,
-   including which missing evidence would resolve it. Existing sample checks,
-   holds and the one-change-per-site limit still apply.
-4. Verification: state what was checked, what remains unverified, and the next
-   evidence check. For an implemented change, retain the fixed baseline and
-   +14/+28-day checks; observed movement does not establish causation.
+- Observation: source, read date/window, exact scope, data state and limits;
+  clicks, impressions, CTR, position, baseline dates and due checks.
+- Interpretation: query/page/product/buyer fit with the goal; label inference
+  and unknowns, including unavailable business outcomes.
+- Proposal or wait: the smallest supported change, or reason and missing evidence.
+- Verification: completed checks, remaining gaps and the next evidence check.
+  Observed movement does not prove causation.
 
 "Wait" is a complete outcome. Link signal issues or a PR when one exists.
 Separate contract tests, host activation, real GSC access and unattended CI evidence.
