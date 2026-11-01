@@ -5,10 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.7.0] - 2026-11-01
+## [1.8.0] - 2026-11-02
 
 ### Added
 - Check explicit URL, canonical, noindex, metadata and sitemap expectations without Search Console access or site changes.
+- Detect broken owned links from selected source pages and empty public documentation, with explicit language expectations and incomplete coverage.
 
 ## [1.7.0] - 2026-10-28
 

@@ -11,8 +11,8 @@
   "plugins": [
     {
       "name": "seo-pulse",
-      "description": "Run Search Console driven SEO cycles and maintain weekly reports and signal issues without editing sites.",
-      "version": "1.7.0",
+      "description": "Run Search Console SEO cycles and bounded public-page checks for broken links, empty documentation and explicit technical expectations.",
+      "version": "1.8.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },

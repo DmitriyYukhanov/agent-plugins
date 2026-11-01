@@ -6,7 +6,17 @@
       "https://www.example.com"
     ],
     "sitemap_url": "https://example.com/sitemap.xml",
+    "link_prefixes": ["https://example.com/docs/"],
     "pages": [
+      {
+        "url": "https://example.com/docs/api/Item.html",
+        "role": "public",
+        "canonical": "https://example.com/docs/api/Item.html",
+        "require_title": true,
+        "article": true,
+        "lang": "en",
+        "check_links": true
+      },
       {
         "url": "http://example.com/privacy",
         "final_url": "https://example.com/privacy",

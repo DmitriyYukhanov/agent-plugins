@@ -1,9 +1,11 @@
 ---
 name: seo-pulse
-description: Use when asked to run an SEO pulse, review Search Console positions or queries, check an SEO measurement date, or prepare a weekly SEO report. Reads site scope from the project and chooses at most one change per site, or waits for more evidence.
+description: Use when asked to run an SEO pulse, review Search Console queries or measurements, prepare a weekly SEO report, or check owned pages for broken links, empty documentation and technical SEO expectations. Reads project scope and reports evidence or waits; technical checks need no GSC access.
 ---
 
 # SEO pulse
+
+For a requested technical check, go directly to [Automatic technical checks](#automatic-technical-checks). Use the project's reviewed `technical` config; this path needs public HTTP access and Python, without the GSC setup below.
 
 Read `.claude/seo-pulse.json` in the owning repository, or an explicitly supplied
 config. It supplies the GSC properties, page prefixes, SEO logs and measurements.
@@ -140,4 +142,4 @@ store visits, sales and conversion require separate provider evidence.
 
 ## Automatic technical checks
 
-For an explicitly requested technical audit, use the bundled [technical checker](references/technical.md) with reviewed URL expectations. This report-only command works without GSC and never changes the site or measurement holds. Keep missing collection evidence separate from confirmed regressions. A manual workflow template does not enable a schedule or repair queue.
+For an explicitly requested technical audit, use the bundled [technical checker](references/technical.md) with reviewed URL expectations. It checks status, canonical, noindex and opt-in metadata, title, article text and language. Selected source pages can reveal broken owned links in one bounded hop. Review generated-document roles and path scope first; report omitted URLs when the request budget cannot cover the manifest. This report-only command works without GSC and never changes the site or measurement holds. Keep missing collection evidence separate from confirmed regressions. A workflow template does not enable a schedule or repair queue.
