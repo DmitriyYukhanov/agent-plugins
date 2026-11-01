@@ -73,6 +73,31 @@ def archive(report):
 
 
 class IntakeTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "win32", "Windows standard handles")
+    def test_api_without_console_stdin(self):
+        import ctypes
+        from ctypes import wintypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetStdHandle.restype = wintypes.HANDLE
+        kernel.SetStdHandle.argtypes = (wintypes.DWORD, wintypes.HANDLE)
+        original = kernel.GetStdHandle(-10)
+        real_run = subprocess.run
+
+        def local_cli(args, **kwargs):
+            return real_run([sys.executable, "-c", (
+                "import sys; print(sys.stdin.buffer.read().decode() or '{}')"
+            )], **kwargs)
+
+        self.assertTrue(kernel.SetStdHandle(-10, wintypes.HANDLE(-1)))
+        try:
+            with patch.object(seo.subprocess, "run", side_effect=local_cli):
+                self.assertEqual(self.real_api("user"), {})
+                payload = {"labels": ["agent"]}
+                self.assertEqual(self.real_api("user", data=payload), payload)
+        finally:
+            kernel.SetStdHandle(-10, original)
+
     def setUp(self):
         patch.object(seo, "DEADLINE", float("inf")).start()
         self.policy = copy.deepcopy(POLICY)
