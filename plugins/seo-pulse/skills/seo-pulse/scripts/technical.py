@@ -162,6 +162,10 @@ class Signals(HTMLParser):
             self.head = False
         if tag in ('title','style','script'): self.text_tag = tag
         if tag == 'script' and (d.get('type') or '').lower() == 'application/ld+json': self.script = ''
+        if tag == 'meta':
+            name = (d.get('name') or d.get('property') or '').lower()
+            if len(attrs) != len(d): self.ambiguous = True
+            if name in ('robots','googlebot'): self.robots.append(d.get('content') or '')
         if not self.head: return
         if tag in ('meta','link','base') and len(attrs) != len(d): self.ambiguous = True
         if tag == 'base' and self.base is None and 'href' in d: self.base = d['href'] or ''
@@ -170,7 +174,6 @@ class Signals(HTMLParser):
         if tag == 'meta':
             name = (d.get('name') or d.get('property') or '').lower()
             self.meta.setdefault(name, []).append(d.get('content') or '')
-            if name in ('robots','googlebot'): self.robots.append(d.get('content') or '')
 
     def handle_endtag(self, tag):
         if self.text_tag and tag != self.text_tag: return

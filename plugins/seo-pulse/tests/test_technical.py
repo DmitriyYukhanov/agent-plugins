@@ -184,6 +184,12 @@ class TechnicalTests(unittest.TestCase):
         r=self.report(value=response(headers=[('Content-Type','application/json'),('X-Robots-Tag','noindex')]))
         self.assertEqual(r['status'],'fail');self.assertFalse(r['complete'])
 
+    def test_body_robots_directive_is_applicable(self):
+        body='<head><link rel="canonical" href="/privacy"></head><body><meta name="robots" content="noindex"></body>'
+        self.assertEqual(self.report(value=response(body))['status'],'fail')
+        cfg=config(role='nonindexable');cfg['technical']['pages'][0].pop('canonical')
+        self.assertEqual(self.report(cfg,response(body))['status'],'pass')
+
     def test_markdown_escapes(self):
         r=self.report();text=t.markdown(r)
         self.assertIn('Technical SEO report',text)
