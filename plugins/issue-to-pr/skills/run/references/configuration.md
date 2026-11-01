@@ -19,6 +19,7 @@ visual_cmd: npm run visual   # optional; UI/visual verification
 smoke_cmd: npm run smoke     # optional; post-merge smoke
 # optional; headless never self-merges a diff touching these
 human_paths: migrations/* wrangler*.jsonc render.yaml
+auto_merge_limits: 200 5 2 50  # optional: changed lines, files, factor, net growth
 # optional; headless runs this after Step 9
 after_merge: /deploy patch --no-announce
 ---
@@ -35,6 +36,14 @@ working the commands out again.
 even when the prose forgets. `after_merge` is the instruction a headless run gives itself after
 cleanup, usually a deploy skill; an attended run ignores it. Both are `--headless` keys:
 `R/headless.md`.
+
+`auto_merge_limits` is an optional line of four positive integers: maximum added plus deleted
+lines, maximum files, addition/deletion factor, and net-growth limit. `200 5 2 50` holds automatic
+merge above 200 changed lines or 5 files, or when additions exceed twice the deletions and net
+growth exceeds 50. All files count, including empty files; renames count both paths. Binary or
+unreadable diffs wait for owner review. The gate refreshes the PR base before measuring. Without
+this key, existing behavior stays unchanged. Explicit owner-approved merges can exceed these
+limits. Tier, reviews, tests and `human_paths` still apply.
 
 ## Resolving the base
 

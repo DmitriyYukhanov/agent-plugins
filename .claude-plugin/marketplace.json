@@ -133,7 +133,7 @@
     {
       "name": "issue-to-pr",
       "description": "Take GitHub issues to reviewed pull requests through isolated worktrees, tests, and explicit merge gates.",
-      "version": "9.10.1",
+      "version": "9.11.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },

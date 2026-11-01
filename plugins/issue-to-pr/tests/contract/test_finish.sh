@@ -866,3 +866,102 @@ test_headless_merge_fails_closed_when_github_cannot_be_read() {
   assert_rc 0
   assert_key "$OUT" MERGED true
 }
+
+
+size_diff() { # additions deletions files
+  local additions=$1 deletions=$2 files=$3 count=0 i
+  merge_setup happy
+  write_config "$REPO" auto_merge_limits '200 5 2 50'
+  if [ "$deletions" -gt 0 ]; then
+    seq "$deletions" >"$REPO/removed.txt"
+    git -C "$REPO" add removed.txt
+    git -C "$REPO" commit -qm baseline
+    git -C "$REPO" push -q origin main
+    git -C "$WT" rebase -q origin/main
+    git -C "$WT" rm -q removed.txt
+    count=$((count + 1))
+  fi
+  if [ "$additions" -gt 0 ]; then
+    seq "$additions" >"$WT/work.txt"
+    git -C "$WT" add work.txt
+    count=$((count + 1))
+  else
+    git -C "$WT" rm -q work.txt
+  fi
+  for ((i = count; i < files; i++)); do
+    : >"$WT/empty-$i.txt"
+    git -C "$WT" add "empty-$i.txt"
+  done
+  git -C "$WT" commit -qm sized-diff
+  git -C "$WT" push -q -f origin feat/issue-6-x
+}
+
+test_limits_allow_exact_line_and_file_boundaries() {
+  size_diff 100 100 5
+  run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+  assert_rc 0
+  assert_key "$OUT" MERGED true
+  assert_key "$OUT" DIFF_ADDITIONS 100
+  assert_key "$OUT" DIFF_DELETIONS 100
+  assert_key "$OUT" DIFF_FILES 5
+}
+
+test_limits_hold_large_or_addition_heavy_changes_using_primary_config() {
+  local numbers
+  for numbers in '101 100 2' '10 10 6' '101 50 2' '51 0 1'; do
+    (
+      TEST_TMPDIR=$(mktemp -d "$TEST_TMPDIR/size-case.XXXXXX")
+      # The numeric fixture triples above intentionally split into arguments.
+      # shellcheck disable=SC2086
+      size_diff $numbers
+      write_config "$WT" auto_merge_limits '10000 100 100 10000'
+      run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+      assert_rc 2
+      assert_key "$OUT" STOP_REASON auto-diff-limit
+      assert_gh_not_called 'pr merge'
+    ) || fail "unexpected merge for fixture $numbers"
+  done
+}
+
+test_limits_allow_a_small_new_file() {
+  size_diff 15 0 1
+  run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+  assert_rc 0
+}
+
+test_limits_allow_growth_at_the_boundary() {
+  size_diff 99 49 2
+  run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+  assert_rc 0
+}
+
+test_limits_require_manual_review_for_binary_changes() {
+  merge_setup happy
+  write_config "$REPO" auto_merge_limits '200 5 2 50'
+  printf '\0binary\n' >"$WT/blob.bin"
+  git -C "$WT" add blob.bin
+  git -C "$WT" commit -qm binary
+  run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+  assert_rc 2
+  assert_key "$OUT" STOP_REASON auto-unprovable
+  assert_gh_not_called 'pr merge'
+}
+
+test_limits_reject_malformed_configuration() {
+  local value
+  merge_setup happy
+  for value in '' '200 5 2' '200 5 two 50' '200 5 0 50' '200 5 2 50 extra'; do
+    write_config "$REPO" auto_merge_limits "$value"
+    run_script finish.sh merge 6 --branch feat/issue-6-x --auto standard --tier trivial
+    assert_rc 2
+    assert_key "$OUT" STOP_REASON auto-unprovable
+  done
+  assert_gh_not_called 'pr merge'
+}
+
+test_limits_do_not_block_an_explicit_owner_merge() {
+  size_diff 51 0 1
+  run_script finish.sh merge 6 --branch feat/issue-6-x
+  assert_rc 0
+  assert_key "$OUT" MERGED true
+}

@@ -39,7 +39,7 @@ root=$(repo_root)
 [ -n "$root" ] || degrade not-a-git-repo "finish: not inside a git repository"
 
 cmd_merge() {
-  local pr head_sha decision base_ref pr_number pr_id cr threads receipt push_out merge_out default_ref base_rev globs pathspecs changed hit
+  local pr head_sha decision base_ref pr_number pr_id cr threads receipt push_out merge_out default_ref base_rev globs pathspecs changed hit limits caps cap stats additions deletions files
   # reviewDecision alone is null on a base branch that does not require review, however many
   # reviews a PR has, so the reviews themselves decide and the field only confirms them
   pr=$(gh pr view "$branch" --json headRefOid,reviewDecision,latestReviews,baseRefName,number,id \
@@ -86,6 +86,35 @@ cmd_merge() {
     if git rev-parse --verify -q "origin/$base_ref^{commit}" >/dev/null; then base_rev="origin/$base_ref"
     elif git rev-parse --verify -q "$base_ref^{commit}" >/dev/null; then base_rev=$base_ref
     else stop auto-unprovable "issue-to-pr: neither origin/$base_ref nor $base_ref resolves here, so the human-path check cannot read the diff. Fetch the base and re-run."
+    fi
+    limits=$(config_line "$root" auto_merge_limits) ||
+      stop auto-unprovable "issue-to-pr: auto_merge_limits must contain four positive integers. $WAIT_FOR_MERGE"
+    if [ -n "$limits" ]; then
+      read -ra caps <<<"$limits"
+      [ "${#caps[@]}" -eq 4 ] ||
+        stop auto-unprovable "issue-to-pr: auto_merge_limits needs changed-lines files factor growth. $WAIT_FOR_MERGE"
+      for cap in "${caps[@]}"; do
+        [[ "$cap" =~ ^[1-9][0-9]{0,8}$ ]] ||
+          stop auto-unprovable "issue-to-pr: auto_merge_limits needs positive integers of at most nine digits. $WAIT_FOR_MERGE"
+      done
+      git fetch --no-tags --no-prune --no-write-fetch-head origin "+refs/heads/$base_ref:refs/remotes/origin/$base_ref" >/dev/null 2>&1 ||
+        stop auto-unprovable "issue-to-pr: could not refresh the PR base to measure its diff. $WAIT_FOR_MERGE"
+      base_rev=$(git rev-parse --verify "refs/remotes/origin/$base_ref^{commit}") ||
+        stop auto-unprovable "issue-to-pr: fetched PR base is unreadable. $WAIT_FOR_MERGE"
+      stats=$(git -C "$root" diff --no-renames --numstat "$base_rev...$branch" |
+        awk -F '\t' '
+          NF < 3 || $1 !~ /^[0-9]+$/ || $2 !~ /^[0-9]+$/ { bad=1; next }
+          { additions+=$1; deletions+=$2; files++ }
+          END { if (bad) exit 1; printf "%.0f %.0f %.0f\n", additions, deletions, files }
+        ') || stop auto-unprovable "issue-to-pr: diff size is unreadable or contains binary files. $WAIT_FOR_MERGE"
+      read -r additions deletions files <<<"$stats"
+      emit DIFF_ADDITIONS "$additions"
+      emit DIFF_DELETIONS "$deletions"
+      emit DIFF_FILES "$files"
+      if (( additions + deletions > caps[0] || files > caps[1] ||
+            (additions > caps[2] * deletions && additions - deletions > caps[3]) )); then
+        stop auto-diff-limit "issue-to-pr: +$additions -$deletions across $files files exceeds auto_merge_limits ($limits). $WAIT_FOR_MERGE"
+      fi
     fi
     # the diff runs over the local branch: the fixture's constant sha never resolves, and the
     # receipt plus --match-head-commit already bind the merge to head_sha.

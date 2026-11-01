@@ -54,7 +54,8 @@ and cleanup. Hard gates block forward progress; everything between them scales t
 merge" become comments on the issue, labels (`agent:*`) carry the state, and the next
 `--headless` run picks up your reply where the last one stopped. It merges when you reply `merge`
 (or `мерж`) to its latest report; a clean PR at or under `--auto-merge` (default `trivial`)
-merges on its own, unless the issue already stopped once or the diff touches `human_paths`.
+merges on its own, unless the issue already stopped once, the diff touches `human_paths`, or
+configured `auto_merge_limits` require owner review.
 
 - **Isolated per task.** Each run cuts its branch inside a dedicated
   `../<repo>-worktrees/issue-<N>` git worktree, so several local agents can drive different
