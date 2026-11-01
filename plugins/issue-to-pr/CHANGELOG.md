@@ -5,6 +5,11 @@ All notable changes to the **issue-to-pr** plugin will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [9.11.0] - 2026-11-01
+
+### Added
+- Hold large or addition-heavy pull requests for owner review with optional automatic merge limits.
+
 ## [9.10.1] - 2026-10-12
 
 ### Changed

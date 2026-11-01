@@ -159,7 +159,7 @@ After the report, decide whether this PR self-merges. All of:
   verify fix after the last review pass or a fix for a review bot's finding is exactly what this
   bullet holds back;
 - `S/finish.sh merge <N> --branch <b> --auto <threshold> --tier <tier>` does not stop: it
-  re-checks the tier and refuses any diff touching `human_paths` from the config, then merges as
+  re-checks the tier, `human_paths` and optional `auto_merge_limits` from the config, then merges as
   Step 8 would.
 
 Merged → Step 9, then `after_merge`. A failed condition above, or a policy stop, means a
