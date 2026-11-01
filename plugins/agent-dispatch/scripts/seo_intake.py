@@ -371,7 +371,7 @@ def confirm_failure(value: dict, policy: dict) -> bool:
     require(status == 200, "page unavailable for this rule")
     page = PageSignals()
     if rule in ("noindex", "canonical"):
-        page.feed(body.decode("utf-8", errors="replace"))
+        page.feed(body.decode("utf-8-sig", errors="replace"))
     if rule == "noindex":
         tags = headers.get_all("X-Robots-Tag", []) if hasattr(headers, "get_all") else [
             val for key, val in headers.items() if key.lower() == "x-robots-tag"]

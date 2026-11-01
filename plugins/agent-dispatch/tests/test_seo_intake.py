@@ -390,6 +390,7 @@ class IntakeTests(unittest.TestCase):
     def test_implicit_head_canonical_is_healthy_but_body_content_ends_head(self):
         value = evidence("canonical", {"canonical": None})
         for markup, failing in [
+            (b'\xef\xbb\xbf<html><head><link rel="canonical" href="https://codestage.net/support/"></head>', False),
             (b'<!doctype html><html><link rel="canonical" href="https://codestage.net/support/"><p>Hello', False),
             (b'<html><title>Healthy page</title><link rel="canonical" href="https://codestage.net/support/">', False),
             (b'<html><title>Choose <b>Pro</b></title><link rel="canonical" href="https://codestage.net/support/">', False),
