@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
 # Test clock: each sleep moves FAKE_CLOCK on by FAKE_SLEEP_STEP and really waits FAKE_SLEEP_REAL.
+if [ -n "${FAKE_SLEEP_READY:-}" ]; then
+  attempts=0
+  while [ ! -s "$FAKE_SLEEP_READY" ] && [ "$attempts" -lt 600 ]; do
+    "$REAL_SLEEP" 0.1
+    attempts=$((attempts + 1))
+  done
+  if [ ! -s "$FAKE_SLEEP_READY" ]; then
+    printf 'test launcher did not become ready within 60 seconds\n' >&2
+    exit 1
+  fi
+fi
 printf '%s\n' "$(($(cat "$FAKE_CLOCK") + ${FAKE_SLEEP_STEP:-20}))" >"$FAKE_CLOCK"
 "$REAL_SLEEP" "${FAKE_SLEEP_REAL:-0.2}"

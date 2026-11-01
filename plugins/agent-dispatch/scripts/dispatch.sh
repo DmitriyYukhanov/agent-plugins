@@ -240,6 +240,20 @@ pick() { # -> PICK_I PICK_N PICK_WHY; rc 1 when nothing is due
   return 1
 }
 
+admit_seo_incidents() {
+  local policy="$AD_HOME/seo-incidents.json" python=python3 repo
+  [ -f "$policy" ] || return 0
+  if on_windows; then python=python; fi
+  if ! command -v "$python" >/dev/null 2>&1; then
+    say 'SEO_INTAKE=unavailable'
+    return 0
+  fi
+  for repo in "${CONF_REPO[@]}"; do
+    "$python" "$HERE/seo_intake.py" --policy "$policy" --repository "$repo" --admit ||
+      say 'SEO_INTAKE=error'
+  done
+}
+
 write_run_script() { # path host issue tier log -> $LOCK/run.sh
   local prompt="issue-to-pr:run $3 --headless --auto-merge $4"
   {
@@ -588,6 +602,7 @@ main() {
   read_config
   OWNER=$(gh api user --jq .login 2>/dev/null | tr -d '\r')
   [ -n "$OWNER" ] || die github "gh api user failed: check gh auth status and the network"
+  admit_seo_incidents
   if ! pick; then
     say "TICK=idle"
     exit 0
