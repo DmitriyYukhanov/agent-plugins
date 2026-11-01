@@ -97,9 +97,9 @@ cmd_merge() {
         [[ "$cap" =~ ^[1-9][0-9]{0,8}$ ]] ||
           stop auto-unprovable "issue-to-pr: auto_merge_limits needs positive integers of at most nine digits. $WAIT_FOR_MERGE"
       done
-      git fetch --no-tags --no-prune origin "$base_ref" >/dev/null 2>&1 ||
+      git fetch --no-tags --no-prune --no-write-fetch-head origin "+refs/heads/$base_ref:refs/remotes/origin/$base_ref" >/dev/null 2>&1 ||
         stop auto-unprovable "issue-to-pr: could not refresh the PR base to measure its diff. $WAIT_FOR_MERGE"
-      base_rev=$(git rev-parse --verify 'FETCH_HEAD^{commit}') ||
+      base_rev=$(git rev-parse --verify "refs/remotes/origin/$base_ref^{commit}") ||
         stop auto-unprovable "issue-to-pr: fetched PR base is unreadable. $WAIT_FOR_MERGE"
       stats=$(git -C "$root" diff --no-renames --numstat "$base_rev...$branch" |
         awk -F '\t' '
