@@ -5,6 +5,11 @@ All notable changes to the **agent-dispatch** plugin will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-11-01
+
+### Fixed
+- Keep scheduled Windows intake checks running without a console.
+
 ## [1.4.0] - 2026-10-27
 
 ### Added

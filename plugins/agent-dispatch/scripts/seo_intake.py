@@ -108,7 +108,8 @@ def gh_api(path: str, *, data: dict | None = None, paginate: bool = False,
         args += ["--paginate", "--slurp"]
     if data is not None:
         args += ["--method", "POST", "--input", "-"]
-    result = subprocess.run(args, input=compact(data).encode() if data is not None else None,
+    # Scheduled Windows tasks may have no usable stdin handle.
+    result = subprocess.run(args, input=compact(data).encode() if data is not None else b"",
                             capture_output=True, timeout=io_timeout(45), check=False)
     require(result.returncode == 0, "GitHub request failed")
     require(len(result.stdout) <= (LIMIT if binary else 8 * LIMIT), "GitHub response exceeds limit")
