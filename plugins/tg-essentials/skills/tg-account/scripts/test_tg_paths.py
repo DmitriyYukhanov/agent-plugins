@@ -153,7 +153,7 @@ class TdataPaths(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("TG_TDATA", result.stdout)
-        self.assertIn(str(path), result.stdout)
+        self.assertIn(str(path.resolve()), result.stdout)
 
 
 if __name__ == "__main__":
