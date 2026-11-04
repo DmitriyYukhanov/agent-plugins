@@ -118,8 +118,16 @@ class TechnicalTests(unittest.TestCase):
         cfg=config()
         later='https://example.com/later'
         cfg['technical']['pages'].append(dict(url=later,role='public',canonical=later))
-        with patch.object(t,'bounded',side_effect=[TimeoutError('Request timed out'),response(final_url=later)]):
-            r=t.collect(cfg)
+        requested=[]
+        def fetcher(url,origins):
+            requested.append(url)
+            return response(f'<link rel="canonical" href="{url}">',final_url=url)
+        def bounded_once(call,seconds):
+            if bound.call_count==1: raise TimeoutError('Request timed out')
+            return call()
+        with patch.object(t,'bounded',side_effect=bounded_once) as bound:
+            r=t.collect(cfg,fetcher)
+        self.assertEqual(requested,[later])
         self.assertEqual(r['coverage']['omitted_pages'],['https://example.com/privacy'])
         self.assertEqual(r['observations'][1]['status'],200)
         self.assertEqual(r['counts']['unknown'],1)
