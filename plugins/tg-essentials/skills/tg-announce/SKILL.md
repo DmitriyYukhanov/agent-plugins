@@ -1,21 +1,23 @@
 ---
 name: tg-announce
-description: Compose and send a short Telegram deployment announcement, or send an operational note, through an existing bot. Use for "announce this deploy", "post release summary" or "send a heads-up"; keep runtime error alerts in tg-alerts.
+description: Complete a release's Telegram announcement through an existing bot. Use when shipping user-visible changes with a configured release channel, or for "announce this deploy", "post release summary" and "send a heads-up". Keep runtime error alerts in tg-alerts.
 argument-hint: "[announce|note|check] <message-file>"
 ---
 
 # Telegram deployment announcements
 
 Use one workflow in Claude Code and Codex. Resolve bundled paths from this installed
-`SKILL.md` and use the current host's file, deployment and shell tools. Run the shipped
+`SKILL.md` and use the current host's file, deployment and shell tools. Include the
+announcement when completing a release; a separate request to announce is unnecessary
+when existing authorization covers it. Reuse the project's release adapter when it owns
+bot routing, message format and receipts. Otherwise run the shipped
 [sender](scripts/tg_announce.py) with Python 3.10 or newer; report a missing Python
-runtime and stop. Keep the executable in the installed plugin, rather than generating
-or copying it into the consuming project. It uses only the standard library.
+runtime and stop. Keep this standard-library executable in the installed plugin.
 
 ## 1. Establish the destination and deployed facts
 
 Identify the project, environment, audience, destination chat and optional forum topic.
-Use the bot and `ALERT_BOT_TOKEN`, `ALERT_CHAT_ID`, `ALERT_THREAD_ID` contract from
+For the shipped sender, use the bot and `ALERT_BOT_TOKEN`, `ALERT_CHAT_ID`, `ALERT_THREAD_ID` contract from
 [tg-alerts](../tg-alerts/SKILL.md#phase-2-create-alert-bot). If setup is missing, follow
 its bot creation and chat/topic discovery phases, then return here. Reuse the existing
 operational bot and keep credentials in the environment or the project's private `.env`.
@@ -43,6 +45,11 @@ can observe and actions they must take. Describe outcomes, using commit types on
 a first filter. Humanize the prose with the current host's humanizer capability before
 saving it. If unavailable, self-edit for plain language and report that fallback.
 
+Changes to loading speed, available data and dashboard refresh behavior count even when
+implemented in background services and no user action is required. If the project's
+release policy permits skipping announcements for changes the audience cannot observe,
+record that classification and reason, then stop without sending.
+
 If nothing qualifies, use the exact empty-release form below. Do not invent bullets.
 For an infrastructure-only deployment where no change passes the audience test, collapse
 the whole deployment into one bullet saying it completed and the audience's work is
@@ -54,6 +61,9 @@ Save the complete rendered message to a private UTF-8 file in the consuming proj
 existing release-output location. Use the same file for every release channel.
 
 ## 3. Validate announcement-v1
+
+An existing project adapter keeps its documented message format, validator and send
+command. The schema and sender commands below apply to the shipped sender.
 
 Run the callable `validate_announcement(text)` on the rendered message before sending when integrating with
 a release flow, or run the credential-free `check` command on the saved file:
@@ -97,7 +107,9 @@ custom limit or bypass flag. A different contract needs a new named schema.
 
 Confirm that the user's existing authorization covers this destination, purpose and
 message. If it does, proceed; otherwise show the exact file and destination and obtain
-approval before sending. End-user broadcasts require their own authorization.
+approval before sending. Honor standing authorization for the configured release
+destination without asking again. New destinations and end-user broadcasts require
+their own authorization.
 
 Keep the working directory on the consuming project so `.env` fallback reads that
 project's configuration. Environment values override `.env` per key; an explicitly
@@ -137,8 +149,9 @@ nothing. Keep tokens, request URLs and raw API error bodies out of reports.
 | `RESULT=NOT_SENT REASON=<reason>` | 1 | Report the local rejection or confirmed API refusal; preserve the file. |
 | `RESULT=UNKNOWN REASON=delivery_unconfirmed` | 2 | Report uncertain delivery; preserve the file and stop automatic resends. |
 
-Keep announcement failure separate from the already completed deployment: `NOT_SENT`
-and `UNKNOWN` appear in the release report and must not mark deployed code as failed.
+An authorized release announcement is complete only with a recorded `SENT` result and
+message ID. `NOT_SENT` and `UNKNOWN` leave release delivery unfinished; keep the saved
+message and report the outstanding delivery separately from the successful deployment.
 A timeout can follow delivery. Before a manual retry after `UNKNOWN`, have a person
 check the destination; show the saved file and retry command without credentials.
 
