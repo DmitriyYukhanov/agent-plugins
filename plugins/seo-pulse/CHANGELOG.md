@@ -5,6 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-11-04
+
+### Fixed
+- Continue checking later URLs after one request times out while preserving the collection limits.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

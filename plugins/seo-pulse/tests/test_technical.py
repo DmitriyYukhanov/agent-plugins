@@ -114,6 +114,16 @@ class TechnicalTests(unittest.TestCase):
         with patch.object(t,'build_opener',return_value=Opener()),patch.object(t,'public_host'):
             self.assertEqual(t.fetch('https://example.com/a',['https://example.com'])['rejected_destination'], 'https://evil.example/')
 
+    def test_request_timeout_does_not_skip_later_pages(self):
+        cfg=config()
+        later='https://example.com/later'
+        cfg['technical']['pages'].append(dict(url=later,role='public',canonical=later))
+        with patch.object(t,'bounded',side_effect=[TimeoutError('Request timed out'),response(final_url=later)]):
+            r=t.collect(cfg)
+        self.assertEqual(r['coverage']['omitted_pages'],['https://example.com/privacy'])
+        self.assertEqual(r['observations'][1]['status'],200)
+        self.assertEqual(r['counts']['unknown'],1)
+
     def test_elapsed_budget_stops_scan(self):
         cfg=config();cfg['technical']['pages'].append(dict(cfg['technical']['pages'][0],url='https://example.com/other'))
         calls=[]

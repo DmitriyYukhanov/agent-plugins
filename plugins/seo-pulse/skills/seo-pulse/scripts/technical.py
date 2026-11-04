@@ -302,17 +302,15 @@ def collect(config, fetcher=None, timeout=60):
     findings, observations = [], []
     deadline = time.monotonic() + timeout
     budget = [100]
-    stopped = False
     cache, errors = {}, {}
     links, edges = [], []
     omitted_pages, unknown_targets, truncated_sources = [], [], set()
     unknown_sources = {p['url'] for p in c['pages'] if p.get('check_links')}
     body_urls = {p['url'] for p in c['pages'] if p['role'] != 'excluded'} | {c.get('sitemap_url')}
     def read(url, derived=False):
-        nonlocal stopped
         if url in errors: raise ValueError(errors[url])
         if url in cache: return cache[url]
-        if stopped or time.monotonic() >= deadline: raise TimeoutError('Collection stopped after elapsed timeout')
+        if time.monotonic() >= deadline: raise TimeoutError('Collection stopped after elapsed timeout')
         if budget[0] <= 0: raise ValueError('Request budget exhausted')
         try:
             if fetcher:
@@ -325,7 +323,6 @@ def collect(config, fetcher=None, timeout=60):
             return cache[url]
         except Exception as error:
             errors[url] = str(error)
-            if isinstance(error,TimeoutError): stopped = True
             raise
     sitemap, sitemap_error = None, None
     if c.get('sitemap_url') and any('in_sitemap' in p for p in c['pages']):
