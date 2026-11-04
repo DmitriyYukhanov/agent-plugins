@@ -114,6 +114,24 @@ class TechnicalTests(unittest.TestCase):
         with patch.object(t,'build_opener',return_value=Opener()),patch.object(t,'public_host'):
             self.assertEqual(t.fetch('https://example.com/a',['https://example.com'])['rejected_destination'], 'https://evil.example/')
 
+    def test_request_timeout_does_not_skip_later_pages(self):
+        cfg=config()
+        later='https://example.com/later'
+        cfg['technical']['pages'].append(dict(url=later,role='public',canonical=later))
+        requested=[]
+        def fetcher(url,origins):
+            requested.append(url)
+            return response(f'<link rel="canonical" href="{url}">',final_url=url)
+        def bounded_once(call,seconds):
+            if bound.call_count==1: raise TimeoutError('Request timed out')
+            return call()
+        with patch.object(t,'bounded',side_effect=bounded_once) as bound:
+            r=t.collect(cfg,fetcher)
+        self.assertEqual(requested,[later])
+        self.assertEqual(r['coverage']['omitted_pages'],['https://example.com/privacy'])
+        self.assertEqual(r['observations'][1]['status'],200)
+        self.assertEqual(r['counts']['unknown'],1)
+
     def test_elapsed_budget_stops_scan(self):
         cfg=config();cfg['technical']['pages'].append(dict(cfg['technical']['pages'][0],url='https://example.com/other'))
         calls=[]
