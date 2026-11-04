@@ -3,7 +3,8 @@
 The auth key lives only in memory (StringSession, never saved). Never call log_out():
 it would terminate the owner's real desktop session.
 """
-import os, pathlib, sys
+import sys
+from tg_paths import resolve_tdata
 from opentele.td import TDesktop
 from opentele.api import API
 from telethon import TelegramClient, errors
@@ -15,22 +16,14 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 
-def _default_tdata():
-    home = pathlib.Path.home()
-    if sys.platform == "win32":
-        return pathlib.Path(os.environ.get("APPDATA", home)) / "Telegram Desktop" / "tdata"
-    if sys.platform == "darwin":
-        return home / "Library" / "Application Support" / "Telegram Desktop" / "tdata"
-    return home / ".local" / "share" / "TelegramDesktop" / "tdata"
-
-
-TDATA = os.environ.get("TG_TDATA") or str(_default_tdata())
+TDATA = None
 DC = {1: "149.154.175.53", 2: "149.154.167.51", 3: "149.154.175.100", 4: "149.154.167.91", 5: "91.108.56.130"}
 
 
 def accounts():
-    if not os.path.isdir(TDATA):
-        raise SystemExit(f"no tdata at {TDATA}; set TG_TDATA to the Telegram Desktop tdata folder")
+    global TDATA
+    if TDATA is None:
+        TDATA = str(resolve_tdata())
     return TDesktop(TDATA).accounts
 
 
