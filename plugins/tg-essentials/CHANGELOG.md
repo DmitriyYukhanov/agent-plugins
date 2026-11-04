@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.7.0] - 2026-11-04
+
+### Added
+- Find portable Telegram Desktop profiles on Windows and diagnose missing or ambiguous session folders before connecting.
+
 ## [2.6.0] - 2026-10-21
 
 ### Added

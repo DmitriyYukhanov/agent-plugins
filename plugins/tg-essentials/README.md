@@ -57,7 +57,7 @@ Talks to Telegram as you, using the session Telegram Desktop already keeps on di
 - Create a group, send, edit and pin posts, and set the group photo
 - Post a native checklist that members can tick (sending one needs Telegram Premium)
 
-Every write waits for your yes first. Requires Telegram Desktop and Python 3.12. Run the skill's setup script once; a portable Telegram install also needs `TG_TDATA` pointing at its `tdata` folder.
+Every write waits for your yes first. Requires Telegram Desktop and Python 3.12. Run the skill's setup script once. On Windows, the skill can find a portable install through a running Telegram process or the registered `tg://` handler. Set `TG_TDATA` to choose a specific folder. See the [path diagnostic and setup examples](skills/tg-account/SKILL.md#setup-once).
 
 Normal exports include voice messages and video notes on their original message lines. On the first note without a cached transcript, the exporter installs any missing transcription dependencies and downloads Whisper `small` (about 500 MB). One local CPU process handles recognition without an API key or agent tokens. Successful transcripts are cached inside the export's `.transcripts` folder; temporary media files are deleted after processing. Keep that folder private along with the exported chat. Failures stay visible and retry on the next export. Use `--no-transcribe` only when you want to skip speech.
 

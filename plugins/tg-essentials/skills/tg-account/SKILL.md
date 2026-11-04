@@ -26,7 +26,26 @@ python3.12 "<skill dir>/scripts/setup.py"      # Windows: py -3.12 "<skill dir>/
 
 Creates `~/.tg-account/venv`, installs `opentele==1.15.1` + `telethon==1.45.0` and patches opentele for Telegram Desktop 7.x (unknown map key type 23 gives "No account has been loaded"; a recursion in the `api` setter). If setup says a patch target is not found, opentele changed; re-check both patches in `opentele/td/account.py`. Idempotent: if the venv python is missing, just run it again.
 
-`tdata` defaults to the standard Telegram Desktop location (`%APPDATA%/Telegram Desktop/tdata`, `~/Library/Application Support/Telegram Desktop/tdata`, `~/.local/share/TelegramDesktop/tdata`). A portable install needs env `TG_TDATA` pointing at its `tdata` folder.
+The scripts choose `tdata` in this order.
+
+1. `TG_TDATA`, when nonempty. An invalid override stops the command.
+2. The standard Telegram Desktop folder (`%APPDATA%/Telegram Desktop/tdata`, `~/Library/Application Support/Telegram Desktop/tdata`, `~/.local/share/TelegramDesktop/tdata`).
+3. On Windows, `tdata` beside an existing `Telegram.exe` found through the current user's registered `tg://` handler in HKCU or a running Telegram process in the current login session. Process lookup has a three-second timeout. A failed lookup still allows the other source to work.
+
+A candidate must contain a `key_datas`, `key_data0` or `key_data1` file. Discovery only checks file presence. If the automatic sources identify different folders, or a command uses `-workdir` or `-key`, stop and ask the owner to choose an explicit `TG_TDATA`. Multiple accounts inside one folder still follow the account-selection rules below.
+
+Run the local diagnostic before loading accounts when the path is unclear. It prints the path sources and missing markers, without loading keys, importing Telegram libraries or connecting to Telegram.
+
+```powershell
+python '<skill dir>/scripts/tg_paths.py'
+$env:TG_TDATA = 'D:/Portable Apps/Telegram/tdata'  # Current process and its children
+python '<skill dir>/scripts/tg_paths.py'
+[Environment]::SetEnvironmentVariable('TG_TDATA', 'D:/Portable Apps/Telegram/tdata', 'User')
+```
+
+Replace the example with the owner's actual `tdata` folder. The quotes belong to PowerShell syntax, not the stored value. For a persistent setting, restart the agent host from a new login session or a parent process that has the updated environment, then rerun the diagnostic there. Existing processes may retain the old value. On macOS/Linux, use `export TG_TDATA='/path with spaces/tdata'` in the host's shell environment. The skill has no separate path configuration file.
+
+If the diagnostic succeeds but a Telegram command hangs, investigate connection permissions and network access separately. Finding `tdata` does not verify a connection.
 
 Run base setup automatically if the venv is missing. Normal exports prepare speech recognition themselves, only when they encounter an in-range voice message or video note without a cached transcript. The user does not need to request transcription or supply a flag.
 
