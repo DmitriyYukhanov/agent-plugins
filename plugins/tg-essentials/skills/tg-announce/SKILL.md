@@ -34,6 +34,8 @@ Read the consuming release flow's prior result for that identity before a rerun:
 - `SENT`: report the existing message ID and skip another send.
 - `UNKNOWN`: stop for a person to check the destination and reconcile delivery.
 - `NOT_SENT`: keep the saved file available for a deliberate retry.
+- Prior result absent or unreadable on a rerun: check the destination and reconcile
+  delivery before sending again.
 
 Let the consuming release flow retain these results with its existing deploy evidence.
 The sender stores no receipts and does not deduplicate reruns itself.
