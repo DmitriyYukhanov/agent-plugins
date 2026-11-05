@@ -150,7 +150,7 @@ class ScheduledCLI(unittest.TestCase):
                         ["--schedule-at", "2026-11-01T19:00:00+03:00", "--operation", "receipt.jsonl", "--pin"]):
             with self.subTest(options=options), \
                  patch.object(sys, "argv", [tg_write.__file__, "send", "chat", "file", *options]), \
-                 patch("tgsess.accounts", side_effect=AssertionError("must not read tdata")), \
+                 patch("tgsess.accounts", side_effect=AssertionError("must not access accounts")), \
                  contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as error:
                     runpy.run_path(tg_write.__file__, run_name="__main__")

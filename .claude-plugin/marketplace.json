@@ -89,7 +89,7 @@
     {
       "name": "tg-essentials",
       "description": "Read and manage Telegram chats, send bot alerts, and publish checked deployment announcements.",
-      "version": "2.8.0",
+      "version": "3.0.0",
       "author": {
         "name": "Dmitry Yuhanov"
       },

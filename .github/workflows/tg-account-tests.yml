@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install Telegram dependencies
-        run: python -m pip install opentele==1.15.1 telethon==1.45.0
+        run: python -m pip install telethon==1.45.0 qrcode==8.2
       - name: Run offline regression tests
         run: python -m unittest discover -s plugins/tg-essentials/skills/tg-account/scripts -p "test_*.py"
       - name: Run announcement checks
