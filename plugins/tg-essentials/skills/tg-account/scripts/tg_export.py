@@ -4,7 +4,7 @@ Usage: tg_export.py CHAT SINCE OUT [ACCOUNT_ID] [--no-transcribe]
   CHAT        @username, t.me link or numeric id (-100..., user id for a DM); see tg_find.py
   SINCE       first day to keep, YYYY-MM-DD (local time)
   OUT         output dir, one YYYY-MM-DD.txt per day
-  ACCOUNT_ID  tdata account to read with; default: first account that can open CHAT
+  ACCOUNT_ID  configured account to read with; default: first account that can open CHAT
   --no-transcribe  skip automatic voice and video-note transcription
 
 Line format, sorted by id, local time:  [HH:MM] #id ->#reply Name: text
@@ -99,4 +99,6 @@ if __name__ == "__main__":
     parser.add_argument("--transcribe", action=argparse.BooleanOptionalAction, default=True,
                         help="Transcribe voice and video notes locally (enabled by default)")
     args = parser.parse_args()
-    asyncio.run(main(args.chat, args.since, args.out, args.account, args.transcribe))
+    from tgsess import session_lock
+    with session_lock():
+        asyncio.run(main(args.chat, args.since, args.out, args.account, args.transcribe))

@@ -279,6 +279,7 @@ class CreateTopicCLI(unittest.TestCase):
             client.get_me.return_value = types.User(id=5000000007)
             argv = [tg_write.__file__, "topic", CHAT, "Планы 🌿", "--account", "5000000007", "--operation", operation]
             with patch.object(sys, "argv", argv), \
+                 patch.object(tgsess, "ROOT", pathlib.Path(temp) / "sessions"), \
                  patch.object(tgsess, "open_chat", AsyncMock(return_value=(client, FORUM, 5000000007))) as connection, \
                  contextlib.redirect_stdout(io.StringIO()) as output:
                 runpy.run_path(tg_write.__file__, run_name="__main__")

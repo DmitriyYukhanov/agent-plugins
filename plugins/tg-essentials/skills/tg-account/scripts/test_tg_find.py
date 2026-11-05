@@ -8,9 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from telethon import errors, functions, types
 from test_tg_write import DATE, FORUM, topic
 
-# Importing the old finder must not read tdata during the red test run.
-with patch("tgsess.accounts", return_value=[]):
-    import tg_find
+import tg_find
 
 
 def page(topics, count=3, by_create=False, messages=None):
@@ -99,18 +97,18 @@ class FindTopics(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(client.disconnect.await_count, 2)
 
     async def test_accounts_only_never_connects(self):
-        with patch.object(tg_find, "accounts", return_value=[SimpleNamespace(UserId=1, MainDcId=2)]), \
+        with patch.object(tg_find, "accounts", return_value=[SimpleNamespace(UserId=1)]), \
              patch.object(tg_find, "client_for", Mock(side_effect=AssertionError("must not connect"))), \
              contextlib.redirect_stdout(io.StringIO()) as output:
             await tg_find.main([])
-        self.assertIn("account 1 (dc 2)", output.getvalue())
+        self.assertIn("account 1", output.getvalue())
 
     async def test_keyword_search_still_matches_names_and_usernames(self):
         async def dialogs():
             for name, username in (("Other", "alice"), ("Work Chat", None), ("Skip", None)):
                 yield SimpleNamespace(id=42, name=name, entity=SimpleNamespace(username=username))
         client = SimpleNamespace(connect=AsyncMock(), disconnect=AsyncMock(), iter_dialogs=dialogs)
-        with patch.object(tg_find, "accounts", return_value=[SimpleNamespace(UserId=1, MainDcId=2)]), \
+        with patch.object(tg_find, "accounts", return_value=[SimpleNamespace(UserId=1)]), \
              patch.object(tg_find, "client_for", return_value=client), contextlib.redirect_stdout(io.StringIO()) as output:
             await tg_find.main(["@ALICE", "WORK"])
         self.assertIn("'Other'  @alice", output.getvalue())

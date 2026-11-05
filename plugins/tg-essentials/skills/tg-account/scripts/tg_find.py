@@ -1,11 +1,11 @@
-"""List tdata accounts and, per account, the dialogs whose title or @username contains any keyword.
+"""List configured accounts and dialogs whose title or @username contains any keyword.
 
 Usage: tg_find.py [keyword ...]      (no keywords = accounts only)
        tg_find.py --topics CHAT [--account ID]  list a forum's topic names and IDs
 """
 import argparse, asyncio, sys
 from telethon import errors, functions, types
-from tgsess import accounts, client_for, name, open_chat
+from tgsess import accounts, client_for, name, open_chat, session_lock
 
 
 async def topics(chat, account=None):
@@ -51,12 +51,12 @@ async def topics(chat, account=None):
 async def main(keywords):
     kw = [k.lower().lstrip("@") for k in keywords]
     for a in accounts():
-        print(f"account {a.UserId} (dc {a.MainDcId})")
+        print(f"account {a.UserId}")
         if not kw:
             continue
         c = client_for(a.UserId)
-        await c.connect()
         try:
+            await c.connect()
             async for d in c.iter_dialogs():
                 e = d.entity
                 user = getattr(e, "username", None)
@@ -76,8 +76,10 @@ if __name__ == "__main__":
     if a.topics is not None:
         if a.keywords:
             p.error("use --topics CHAT without keyword arguments")
-        asyncio.run(topics(a.topics, a.account))
+        with session_lock():
+            asyncio.run(topics(a.topics, a.account))
     else:
         if a.account is not None:
             p.error("--account requires --topics CHAT")
-        asyncio.run(main(a.keywords))
+        with session_lock():
+            asyncio.run(main(a.keywords))

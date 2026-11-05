@@ -5,6 +5,17 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.0] - 2026-11-05
+
+### Changed
+- Require a separate Telegram login by QR or phone code instead of reusing the Desktop authorization.
+
+### Fixed
+- Prevent concurrent account commands from sharing a session, and release the lock when a process exits.
+
+### Removed
+- Remove Telegram Desktop profile discovery and the dependency on its local files.
+
 ## [2.8.0] - 2026-11-05
 
 ### Changed

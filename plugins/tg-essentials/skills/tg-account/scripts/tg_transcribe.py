@@ -22,7 +22,7 @@ class Transcriber:
         if self.error:
             raise RuntimeError(self.error)
         if self.launch is None:
-            # Keep Whisper's native libraries separate from opentele's Qt libraries.
+            # Isolate native speech libraries from the Telegram client process.
             self.launch = asyncio.create_task(asyncio.create_subprocess_exec(
                 sys.executable, "-u", str(Path(__file__).resolve()), "--worker",
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, limit=8 * 1024 * 1024,

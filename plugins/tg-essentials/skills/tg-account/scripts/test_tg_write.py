@@ -144,7 +144,7 @@ class TopicCLI(unittest.TestCase):
             for value in ("bad", "0", "-1", "2147483648"):
                 with self.subTest(command=command, value=value), \
                      patch.object(sys, "argv", ["tg_write.py", command, "chat", "file", "--topic", value]), \
-                     patch("tgsess.accounts", Mock(side_effect=AssertionError("must not access tdata"))), \
+                     patch("tgsess.accounts", Mock(side_effect=AssertionError("must not access accounts"))), \
                      contextlib.redirect_stderr(io.StringIO()) as output:
                     with self.assertRaises(SystemExit) as error:
                         runpy.run_path(tg_write.__file__, run_name="__main__")

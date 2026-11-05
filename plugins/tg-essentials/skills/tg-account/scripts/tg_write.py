@@ -1,4 +1,4 @@
-"""Write to Telegram as a tdata account: groups, topics, messages, checklists, pins, photos.
+"""Write to Telegram as a configured account: groups, topics, messages, checklists, pins, photos.
 
 Every call acts as the account owner and is seen by everyone in the chat. Show the owner
 the exact target and text and get a yes before running it.
@@ -11,7 +11,7 @@ Usage:
   tg_write.py edit CHAT MSG_ID FILE             replace the text of your own message
   tg_write.py todo CHAT FILE [--pin] [--topic ID]  send a native checklist (needs Telegram Premium)
   tg_write.py photo CHAT IMAGE                  set the group or channel photo
-Every command takes --account ID; it is required when tdata holds more than one account.
+Every command takes --account ID; it is required when more than one account is configured.
 
 MEMBER and CHAT: @username, t.me link or numeric id from tg_find.py.
 TOPIC: a forum topic ID from tg_find.py --topics CHAT; 1 is General.
@@ -27,7 +27,7 @@ import argparse, asyncio, hashlib, json, os, pathlib, sys, unicodedata
 from datetime import datetime, timedelta, timezone
 from telethon import errors, functions, types, utils
 from telethon.extensions import markdown
-from tgsess import accounts, client_for, name, open_chat, peer, warm
+from tgsess import accounts, client_for, name, open_chat, peer, warm, session_lock
 
 
 def read(path):
@@ -99,8 +99,8 @@ def parse_todo(text):
 
 async def group():
     c = client_for(a.account)
-    await c.connect()
     try:
+        await c.connect()
         refs = [peer(m) for m in a.members]
         await warm(c, refs)
         users = [await c.get_entity(r) for r in refs]
@@ -379,18 +379,19 @@ if __name__ == "__main__":
         if a.schedule_at is None or not a.operation or not a.account or a.pin:
             p.error("scheduled sends require --schedule-at, --operation and --account, without --pin")
 
-    if a.account is None:
-        ids = [x.UserId for x in accounts()]
-        if len(ids) != 1:
-            sys.exit(f"tdata holds accounts {ids}; pass --account to pick who writes")
-        a.account = ids[0]
-    if a.cmd == "todo":
-        try:
-            a.todo = parse_todo(read(a.file))  # fail on a bad file before connecting
-        except ValueError as ex:
-            sys.exit(f"checklist: {ex}")
+    with session_lock():
+        if a.account is None:
+            ids = [x.UserId for x in accounts()]
+            if len(ids) != 1:
+                sys.exit(f"configured accounts: {ids}; pass --account to pick who writes")
+            a.account = ids[0]
+        if a.cmd == "todo":
+            try:
+                a.todo = parse_todo(read(a.file))  # fail on a bad file before connecting
+            except ValueError as ex:
+                sys.exit(f"checklist: {ex}")
 
-    if a.cmd == "group":
-        asyncio.run(group())
-    else:
-        asyncio.run(in_chat({"send": send, "edit": edit, "todo": todo, "photo": photo, "topic": create_topic}[a.cmd]))
+        if a.cmd == "group":
+            asyncio.run(group())
+        else:
+            asyncio.run(in_chat({"send": send, "edit": edit, "todo": todo, "photo": photo, "topic": create_topic}[a.cmd]))
