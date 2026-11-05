@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.8.0] - 2026-11-05
+
+### Changed
+- Require confirmed Telegram delivery before completing an authorized release announcement, including changes that need no user action.
+
 ## [2.7.0] - 2026-11-04
 
 ### Added
