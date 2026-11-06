@@ -127,6 +127,21 @@ test_report_names_fixes_without_regression_tests_at_every_tier() {
   assert_contains "$report" 'report and PR body at every tier' "short reports and the PR body must retain the exceptions"
 }
 
+test_report_reconciles_the_applicable_flow_after_bot_fixes() {
+  local report companions
+  report=$(skill_step 'PR and report')
+  companions=$(cat "$(companions_md)")
+  assert_contains "$report" 'Final flow reconciliation' "the report must reconcile the flow before asking to merge"
+  assert_contains "$report" 'current HEAD and changed behavior' "evidence must cover the reported change"
+  case "$report" in
+    *'that bot as unchecked.'*'Final flow reconciliation'*'Then report,'*) : ;;
+    *) fail "reconcile after bot handling and before the final report" ;;
+  esac
+  assert_contains "$report" 'do not request merge approval or self-merge' "incomplete flow must not reach either merge path"
+  assert_contains "$report" 'When the flow is complete, ask when to merge' "the terminal instruction must respect reconciliation"
+  assert_contains "$companions" 'available and its runtime requirements are met' "an available companion must not be silently replaced"
+}
+
 test_the_second_model_review_only_reports() {
   local row step
   row=$(grep -i 'second-model review' "$(companions_md)")

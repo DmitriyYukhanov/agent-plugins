@@ -191,11 +191,24 @@ retaining entries for the other files still changed against `<BASE>`. Each bot t
 `S/bots.sh reply <id> --body-file <f>`, the fix SHA or why it was rejected, which also resolves
 it; a person's thread stays open for them; body findings get one `gh pr comment --body-file`. Do
 not wait again: the merge catches what arrives later. A `bots.sh` stop is no run stop: report
-that bot as unchecked. Then report, length per tier (3 lines → full): what was built and why, test status with the
+that bot as unchecked.
+
+**Final flow reconciliation:** Before the report and merge decision, compare this run with these
+instructions and `R/companions.md` for its tier and mode. Account for applicable steps, companions,
+agents and independent reviews, tests, gates, runtime, security and simplification checks. Record
+each requirement's result and evidence or the specific reason for an allowed skip or fallback in
+`<RUN_DIR>/notes.md`. Check that evidence covers the current HEAD and changed behavior; green CI
+does not replace a missed step. After fixes, update the affected evidence and report unreviewed changes
+under `R/judgment.md`, keeping the tier's review pass cap. Complete missed requirements
+within the authorized scope. If one cannot be completed, report the exact outstanding step and
+mark the flow incomplete; do not request merge approval or self-merge as though it were complete.
+Unavailable optional vendor adapters do not block unrelated checks or release.
+
+Then report, length per tier (3 lines → full): what was built and why, test status with the
 green proof, relevant material decisions, one line per review bot (its `BOT_<name>` outcome, then
 threads fixed and rejected; `BOTS=none` is "no review bots"), the PR link, and how much
 machinery ran (gate runs, review passes and level). List findings fixed without regression tests,
-when any, with reasons, in the report and PR body at every tier. Omit empty optional sections. Ask when to merge, and **stop** — merging is
+when any, with reasons, in the report and PR body at every tier. Omit empty optional sections. When the flow is complete, ask when to merge, and **stop** — merging is
 the next step.
 
 ## Step 8 — Merge on approval (GATE)

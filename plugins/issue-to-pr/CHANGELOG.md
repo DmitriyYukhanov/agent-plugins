@@ -5,6 +5,11 @@ All notable changes to the **issue-to-pr** plugin will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [9.13.0] - 2026-11-07
+
+### Changed
+- Check the completed flow and its evidence before reporting merge readiness.
+
 ## [9.12.0] - 2026-11-02
 
 ### Changed
