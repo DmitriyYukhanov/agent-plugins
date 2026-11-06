@@ -2,7 +2,8 @@
 
 Use the tools and skills exposed by the current host, not another agent's installed-plugin list.
 Read a companion before invoking it; use it only when its runtime requirements are met. A missing
-tool changes the mechanism, never the required check. Report a fallback once; if the check cannot
+tool changes the mechanism, never the required check. Use the preferred companion when it is
+available and its runtime requirements are met; otherwise report the reason for the fallback once. If the check cannot
 actually be performed, report it as blocked, never passed.
 
 ## Host tools

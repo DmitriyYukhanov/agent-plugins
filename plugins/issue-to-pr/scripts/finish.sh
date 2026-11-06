@@ -258,6 +258,19 @@ remove_worktree() { # path -> REMOVED, LEFTOVER; stops on a dirty tree, never fo
   LEFTOVER=$wt
 }
 
+cleanup_run_state() {
+  local dir
+  dir=$(branch_dir "$root" "$branch")
+  if [ "$REMOVED" != true ] || [ -n "$LEFTOVER" ]; then
+    emit RETAINED_RUN_DIR "$dir"
+    return 0
+  fi
+  assert_run_dir_safe "$root" "$branch"
+  rm -rf -- "$dir" 2>/dev/null ||
+    stop state-cleanup-failed "issue-to-pr: could not remove run state at $dir. Remove it after checking no worker still uses it, then retry cleanup."
+  rmdir -- "$(runtime_dir "$root")" 2>/dev/null || true
+}
+
 cmd_cleanup() {
   local pr_state dependents wt_path wt_branch def deleted_local=false deleted_remote=false
   assert_run_dir_safe "$root" "$branch"
@@ -284,6 +297,7 @@ cmd_cleanup() {
   remove_worktree "$wt_path"
   emit REMOVED "$REMOVED"
   if [ "$keep_branch" -eq 1 ]; then
+    cleanup_run_state
     emit KEPT branch-and-pr
     [ -n "$LEFTOVER" ] && emit LEFTOVER_DIR "$LEFTOVER"
     done_ok
@@ -304,7 +318,7 @@ cmd_cleanup() {
   if git -C "$root" push origin --delete "$branch" >/dev/null 2>&1; then
     deleted_remote=true
   fi
-  rm -rf "$(branch_dir "$root" "$branch")" 2>/dev/null
+  cleanup_run_state
 
   emit DELETED_LOCAL "$deleted_local"
   emit DELETED_REMOTE "$deleted_remote"

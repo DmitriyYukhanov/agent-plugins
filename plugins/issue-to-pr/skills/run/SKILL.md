@@ -45,6 +45,12 @@ gate's own code in `GATE_<NAME>_EXIT`.
   draft body under `RUN_DIR` from Step 1, including companion output. Before an owned branch exists, use a unique OS-temp
   directory (`mktemp -d`) and retain its absolute path for resume. Never write early notes into
   the checkout or a shared `run-main` directory.
+- **File lifecycle:** keep only current run state in `RUN_DIR`, and pass this location to
+  companions and delegates. Use a task-specific OS-temp directory for disposable scratch output;
+  remove it once its result is recorded and no worker needs it. Reuse body files. Retain run state while paused, blocked or waiting for merge, and
+  report its path. On completion or abandonment, stop owned workers and run the cleanup path
+  below; never discard project files, configuration or another run. If the run ends before
+  Step 1, remove its OS-temp directory after saving any needed checkpoint in the handoff.
 - Inspect tracked-state candidates reported by `S/state.sh`. Preserve project configuration and
   unrelated files. Report generated files and offer `git rm --cached -- <exact paths>` after
   approval; never delete them or rewrite history. Exclude confirmed generated paths from review
@@ -191,11 +197,24 @@ retaining entries for the other files still changed against `<BASE>`. Each bot t
 `S/bots.sh reply <id> --body-file <f>`, the fix SHA or why it was rejected, which also resolves
 it; a person's thread stays open for them; body findings get one `gh pr comment --body-file`. Do
 not wait again: the merge catches what arrives later. A `bots.sh` stop is no run stop: report
-that bot as unchecked. Then report, length per tier (3 lines → full): what was built and why, test status with the
+that bot as unchecked.
+
+**Final flow reconciliation:** Before the report and merge decision, compare this run with these
+instructions and `R/companions.md` for its tier and mode. Account for applicable steps, companions,
+agents and independent reviews, tests, gates, runtime, security and simplification checks. Record
+each requirement's result and evidence or the specific reason for an allowed skip or fallback in
+`<RUN_DIR>/notes.md`. Check that evidence covers the current HEAD and changed behavior; green CI
+does not replace a missed step. After fixes, update the affected evidence and report unreviewed changes
+under `R/judgment.md`, keeping the tier's review pass cap. Complete missed requirements
+within the authorized scope. If one cannot be completed, report the exact outstanding step and
+mark the flow incomplete; do not request merge approval or self-merge as though it were complete.
+Unavailable optional vendor adapters do not block unrelated checks or release.
+
+Then report, length per tier (3 lines → full): what was built and why, test status with the
 green proof, relevant material decisions, one line per review bot (its `BOT_<name>` outcome, then
 threads fixed and rejected; `BOTS=none` is "no review bots"), the PR link, and how much
 machinery ran (gate runs, review passes and level). List findings fixed without regression tests,
-when any, with reasons, in the report and PR body at every tier. Omit empty optional sections. Ask when to merge, and **stop** — merging is
+when any, with reasons, in the report and PR body at every tier. Omit empty optional sections. When the flow is complete, ask when to merge, and **stop** — merging is
 the next step.
 
 ## Step 8 — Merge on approval (GATE)
@@ -218,7 +237,7 @@ for that head. A stale receipt requires this same cycle, not just another test r
   (Steps 5–6 on the new diff) until clean, push, re-report, wait again. Never merge unverified.
 - **Anything else** → do **not** merge. A vague ack ("ok", "looks fine") or a question → ask for
   explicit confirmation. If they'll self-merge/abandon, offer `S/finish.sh cleanup <N> --branch
-  <branch> --keep-branch`, which removes the worktree and touches nothing else.
+  <branch> --keep-branch`, which removes the owned worktree and run state, keeping the branch and PR.
   Approval is never inferred.
 
 ## Step 9 — Cleanup (after a successful merge)
@@ -236,10 +255,12 @@ uncertain, stop: preserve the worktree and report recovery needed. Otherwise ope
 PR, never merge it, and report it loudly. Then `S/finish.sh cleanup <N> --branch <branch>`: it refuses
 unless the PR is merged and no open PR is based on the branch, removes the worktree (never forced:
 anything dirty in it is a stop), deletes the local and remote branch and the run's state. Report
+`RETAINED_RUN_DIR` when worktree removal leaves files behind; finish that cleanup before discarding
+the checkpoint. A state-removal failure is a stop, not a successful cleanup. Report
 from its keys: a `LEFTOVER_DIR` is a locked directory to remove by hand once the lock clears,
 `DELETED_LOCAL=false` means the local branch is still there, and `DELETED_REMOTE=false` is normal
-when GitHub deletes head branches itself — check before calling it a failure. In-place fallback: switch off `<branch>` and delete
-it local and remote yourself. **`BASE_IS_DEFAULT`** is the one thing cleanup cannot answer:
+when GitHub deletes head branches itself — check before calling it a failure. The same cleanup
+command handles the in-place fallback and keeps the main checkout. **`BASE_IS_DEFAULT`** is the one thing cleanup cannot answer:
 `false` means the work landed on `<MERGED_INTO>` and the issue is still open, `unknown` means the
 landing branch was never confirmed, so claim neither. `--headless`: then `after_merge` unless the
 smoke was red (`R/headless.md`). Finish with one line: what merged, what
