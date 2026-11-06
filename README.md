@@ -153,8 +153,8 @@ Install with `/plugin install seo-pulse@dmitriy-claude-plugins`.
 ### tg-essentials
 
 Read or manage Telegram chats and forum topics, export history, and prepare
-messages through a separate Telethon session. Also includes bot error
-alerts and checked deployment announcements. Live account operations need their
+messages through a signed-in Telegram client, with optional Telethon exports.
+Also includes bot error alerts and checked deployment announcements. Live account operations need their
 own authorization and dependencies.
 [Documentation](./plugins/tg-essentials/README.md).
 

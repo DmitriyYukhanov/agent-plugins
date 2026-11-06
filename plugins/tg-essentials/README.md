@@ -1,6 +1,6 @@
 # tg-essentials
 
-Telegram toolkit for agents. Error alerts and short deployment announcements go out through a bot. Chats, exports, groups, posts and checklists use a separate Telethon authorization for your user account.
+Telegram toolkit for agents. Error alerts and short deployment announcements go out through a bot. Account tasks use a signed-in Telegram client, with an optional Telethon backend for bulk exports and scripted operations.
 
 Renamed from `tg-alerts` in 2.0.0. If you had the old plugin, uninstall `tg-alerts` and install `tg-essentials`. The alerts skill is now `tg-essentials:tg-alerts`, so update any CLAUDE.md or AGENTS.md line that names `tg-alerts:tg-alerts`.
 
@@ -49,15 +49,17 @@ The cloud Bot API is the default. Operators can select a trusted HTTP or HTTPS s
 
 ### Skill: `tg-account`
 
-Talks to Telegram as you, with its own session created by QR or phone-code login. It does not read or reuse Telegram Desktop's authorization.
+Work as yourself through a signed-in Telegram client, preferably Telegram Web. Sign in by QR or phone code when needed. Ordinary client use requires no API application registration and keeps authentication inside the client.
 
-- Find chats and export their history into one text file per day
+- Find and read chats; the optional API backend exports history into one text file per day
 - List and create forum topics, and send posts or checklists into a selected topic
-- Include local transcripts of voice messages and video notes automatically
+- Include local transcripts of voice messages and video notes automatically in API exports
 - Create a group, send, edit and pin posts, and set the group photo
 - Post a native checklist that members can tick (sending one needs Telegram Premium)
 
-Every write waits for your yes first. Requires Python 3.12 and your own Telegram API ID and hash. Run setup, then `tg_login.py --qr` or `--code` in an interactive terminal. Sessions stay private under `~/.tg-account/sessions/`. All account commands share a process lock. Version 3 requires a fresh login; Desktop sessions are not migrated. See [setup and login](skills/tg-account/SKILL.md#setup-once).
+Every write waits for your yes first. Browser operations use the host's UI controls and permissions; opening chats may mark viewed messages as read. Report missing history or audio rather than treating a visible slice as a complete export. See [the client workflow](skills/tg-account/SKILL.md#start-with-an-existing-client).
+
+The optional API backend requires Python 3.12 and operator-supplied API credentials. Run setup, then `tg_login.py --qr` or `--code` in an interactive terminal. Sessions stay private under `~/.tg-account/sessions/`, and API commands share a process lock. They use a separate authorization, never the active Desktop key. Missing credentials do not trigger developer registration. See [API setup](skills/tg-account/SKILL.md#setup-once).
 
 Normal exports include voice messages and video notes on their original message lines. On the first note without a cached transcript, the exporter installs any missing transcription dependencies and downloads Whisper `small` (about 500 MB). One local CPU process handles recognition without an API key or agent tokens. Successful transcripts are cached inside the export's `.transcripts` folder; temporary media files are deleted after processing. Keep that folder private along with the exported chat. Failures stay visible and retry on the next export. Use `--no-transcribe` only when you want to skip speech.
 

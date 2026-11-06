@@ -5,6 +5,11 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.1.0] - 2026-11-06
+
+### Changed
+- Use a signed-in Telegram client for account tasks without requiring API application registration, and keep direct API access optional.
+
 ## [3.0.0] - 2026-11-05
 
 ### Changed
