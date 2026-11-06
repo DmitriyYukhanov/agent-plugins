@@ -122,6 +122,12 @@ Hosts share this project config. New runtime state lives in
 The branch component is encoded. Existing `.claude/issue-to-pr/run-*` runs continue in place
 until cleanup; config and custom ignore rules stay unchanged. Logs keep the latest result per
 gate. Reuse one notes file and one draft body rather than accumulating copies.
+This internal directory holds the checkpoint and merge receipt while the run is active; no
+separate user-created folder is required. Delete scratch files after use. Terminal cleanup removes
+the owned run state, including with `--keep-branch`, and removes the empty Git-metadata container.
+Paused or blocked runs retain their checkpoint. Failed worktree removal retains it and reports
+`RETAINED_RUN_DIR`; failed state removal stops with the exact path. Project config, custom ignore
+rules and other runs stay intact.
 
 ### Staging review
 

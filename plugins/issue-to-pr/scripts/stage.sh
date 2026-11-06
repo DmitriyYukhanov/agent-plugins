@@ -90,7 +90,7 @@ done <<<"$reason_text"
 
 ensure_run_dir "$root" "$branch" || degrade state-unwritable 'stage: cannot initialize the run directory'
 run_dir=$(branch_dir "$root" "$branch")
-stage_tmp=$(mktemp -d "$run_dir/stage.XXXXXX") || degrade state-unwritable 'stage: cannot create temporary report files'
+stage_tmp=$(mktemp -d "${TMPDIR:-/tmp}/issue-to-pr-stage.XXXXXX") || degrade temp-unwritable 'stage: cannot create temporary report files'
 trap 'rm -f -- "$stage_tmp/paths" "$stage_tmp/unmerged" "$stage_tmp/numstat" "$stage_tmp/report"; rmdir -- "$stage_tmp"' EXIT
 git ls-files --unmerged >"$stage_tmp/unmerged" || stop index-unreadable 'stage: cannot inspect the index'
 [ ! -s "$stage_tmp/unmerged" ] || stop unmerged-index 'stage: resolve index conflicts before staging'

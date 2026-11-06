@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Check the completed flow and its evidence before reporting merge readiness.
+- Remove disposable run files on terminal cleanup and report any retained checkpoint or cleanup failure.
 
 ## [9.12.0] - 2026-11-02
 

@@ -140,6 +140,7 @@ test_cleanup_removes_the_tree_both_branches_and_the_run_dir() {
   ! git -C "$REPO" ls-remote --exit-code --heads origin feat/issue-6-x >/dev/null 2>&1 ||
     fail "the remote branch survived cleanup"
   [ ! -e "$(run_dir_of "$REPO" feat/issue-6-x)" ] || fail "the run directory survived cleanup"
+  [ ! -d "$REPO/.git/issue-to-pr" ] || fail "empty runtime namespace survived cleanup"
 }
 
 # A PR number must not hide the worktree checked out on --branch.
@@ -343,6 +344,7 @@ test_cleanup_refuses_a_worktree_on_another_branch_or_detached_head() {
 
 test_cleanup_reports_an_unregistered_leftover_dir_instead_of_deleting_it() {
   cleanup_setup pr-merged
+  write_receipt "$REPO" feat/issue-6-x "$SHA_OK"
   git -C "$REPO" worktree remove "$WT"
   mkdir -p "$WT"
   printf 'stale\n' >"$WT/leftover"
@@ -351,16 +353,37 @@ test_cleanup_reports_an_unregistered_leftover_dir_instead_of_deleting_it() {
   assert_key_present "$OUT" LEFTOVER_DIR
   assert_key "$OUT" DELETED_LOCAL true
   [ -d "$WT" ] || fail "an unregistered directory must be reported, not deleted"
+  [ -f "$(receipt_file "$REPO" feat/issue-6-x)" ] || fail "leftover work lost its checkpoint"
 }
 
-test_cleanup_keep_branch_removes_the_tree_and_touches_nothing_else() {
+test_cleanup_keep_branch_removes_the_tree_and_run_state() {
   cleanup_setup happy # PR still open: --keep-branch is exempt from the merged precondition
+  write_receipt "$REPO" feat/issue-6-x "$SHA_OK"
   run_script finish.sh cleanup 6 --branch feat/issue-6-x --keep-branch
   assert_rc 0
   assert_key "$OUT" REMOVED true
   [ ! -d "$WT" ] || fail "--keep-branch did not remove the worktree"
   branch_survives || fail "--keep-branch deleted the branch"
   assert_gh_not_called "pr list"
+  [ ! -e "$(run_dir_of "$REPO" feat/issue-6-x)" ] || fail "terminal cleanup kept disposable run state"
+}
+
+test_cleanup_reports_run_state_removal_failure() {
+  cleanup_setup happy
+  write_receipt "$REPO" feat/issue-6-x "$SHA_OK"
+  export FAIL_RM_PATH
+  FAIL_RM_PATH=$(run_dir_of "$REPO" feat/issue-6-x)
+  mkdir -p "$TEST_TMPDIR/bin"
+  cat >"$TEST_TMPDIR/bin/rm" <<'SH'
+#!/usr/bin/env bash
+case "$*" in *"$FAIL_RM_PATH"*) exit 1 ;; esac
+exec /usr/bin/rm "$@"
+SH
+  chmod +x "$TEST_TMPDIR/bin/rm"
+  PATH="$TEST_TMPDIR/bin:$PATH" run_script finish.sh cleanup 6 --branch feat/issue-6-x --keep-branch
+  assert_rc 2
+  assert_key "$OUT" STOP_REASON state-cleanup-failed
+  [ -f "$(receipt_file "$REPO" feat/issue-6-x)" ] || fail "failed cleanup lost the retained state"
 }
 
 test_cleanup_in_place_deletes_the_checked_out_branch() {
