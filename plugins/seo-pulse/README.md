@@ -37,6 +37,7 @@ this GSC workflow by themselves.
 | --- | --- |
 | What deserves attention? | Screens impressions, CTR and position, then checks the actual query and page. |
 | Does the page answer the query? | Checks destination, canonical and page role; returns `match`, `mismatch` or `uncertain` with a reason. |
+| Does this need another page? | Groups tasks before proposing pages; checks actual results when intent is ambiguous and asks what useful content would differ. |
 | Are pages competing? | Compares intent and destinations. Redirects, document sections and different product/docs roles can be normal overlap. |
 | Where would a link help? | Gives source URL/repo, target, natural anchor and placement; checks existing links and both pages' holds. |
 | Is traffic falling consistently? | Weekly mode screens three equal weeks for two consecutive click drops, with sample and coverage checks. |
@@ -56,10 +57,17 @@ supply product docs or other factual evidence and ask:
 > Separate verified facts from assumptions. Check existing pages before suggesting
 > a new one.
 
-Use semantic analysis to explain relevant features, limits and relationships.
-Competitor content can reveal questions; your product evidence must support the
-answers. Keyword repetition and copied outlines do not establish usefulness.
-Localized keywords need market/language evidence beyond a literal translation.
+The [task review](skills/seo-pulse/references/research.md) records the user's input,
+result and execution surface, with dated product sources and inspected result URLs
+when research is needed. The brief gives the source owner and placement, a supported
+answer, necessary steps and limits, proof or missing checks, and the measurement plan.
+It distinguishes an interactive demo from a completed operation. Synonyms and
+device names need useful differences before they justify new pages.
+
+Competitor content can reveal questions; product evidence supports the answers.
+Keyword metrics are estimates, not visitor forecasts or ranking guarantees.
+Localized candidates need local task evidence and checked translations while
+preserving working URLs. The review requires no paid research service.
 
 Implement one justified change through the page owner's reviewed flow. Record
 its date, page, fixed baseline and check dates in the SEO log and config. Hold
