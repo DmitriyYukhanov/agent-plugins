@@ -1,8 +1,9 @@
 # Query research and content brief scenarios
 
 Run these synthetic cases as read-only assessments. Give the agent the prompt and
-fixture observations, with expected outcomes hidden. Use the current skill and
-its linked resources. Record the source version, host, actual outputs and verdicts
+fixture observations, with expected outcomes hidden. Use only the supplied fixture
+facts and make no network calls. Use the current skill and its linked resources.
+Record the source version, host, actual outputs and verdicts
 outside tracked files. Source-loaded cases test application; they do not establish
 plugin discovery, live Search Console access, product execution or scheduled delivery.
 
@@ -58,10 +59,11 @@ facts come from `docs/product.md`, read today. No installed-product test ran;
 installs, file uploads and test accounts are outside this assessment.
 
 Expected: propose one correction explaining the sample-card demo and desktop
-extension requirement. Brief fields include task/input/result/surface, source
-URL/repo/placement, supported opening answer, necessary steps/limits and the
-unperformed result check. Reject mobile claims. A useful illustration can be
-proposed, but no screenshot, successful operation or conversion is fabricated.
+extension requirement. Brief fields include task/input/result/surface, source URL,
+repository identifier, file path, exact placement, supported opening answer,
+necessary steps/limits and the unperformed result check. Reject mobile claims.
+A useful illustration can be proposed, but no screenshot, successful operation
+or conversion is fabricated.
 Keep further implementation in the source owner's reviewed flow with measurement.
 
 ## A localized candidate with a held working URL
