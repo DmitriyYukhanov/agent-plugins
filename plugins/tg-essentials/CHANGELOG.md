@@ -5,6 +5,14 @@ All notable changes to the **tg-essentials** plugin (named **tg-alerts** before 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.0] - 2026-11-07
+
+### Changed
+- Require your own API credentials and a separate account login for reading, exporting and managing chats.
+
+### Removed
+- Remove the browser workflow for account tasks.
+
 ## [3.1.0] - 2026-11-06
 
 ### Changed
