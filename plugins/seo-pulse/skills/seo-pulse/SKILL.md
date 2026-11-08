@@ -66,10 +66,15 @@ requests do not activate this GSC workflow by themselves.
    Historical metrics for a redirected URL do not establish a defect on the final
    page. Read its own current GSC evidence before recommending a change there.
    Keep recommendations within verified owned scope and respect measurement holds.
+   For ambiguous queries, proposed new or localized pages, or content briefs,
+   follow [task research and content review](references/research.md) before
+   recommending a change. Clear existing-page cases need no extra research pass.
 4. Wait when the page is still being measured, the observation covers less than
    two weeks, or it has fewer than about 100 impressions. At most one change per
    site enters implementation. Missing or anonymized rows are unknown, never a
    measured zero or proof of recovery. Report collection errors separately.
+   These sample and timing cutoffs are screening heuristics, not Google rules or
+   proof that a result is statistically reliable.
    Treat URL fragments as sections of the same held page. Keep the original GSC
    URL for exact evidence requests; do not merge fragment rows into page totals.
 5. For an explicitly requested implementation, use that repository's normal branch,

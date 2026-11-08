@@ -5,6 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-11-07
+
+### Added
+- Ground ambiguous queries and proposed pages in task evidence, then give a factual brief with placement, proof and measurement.
+
 ## [1.8.1] - 2026-11-04
 
 ### Fixed

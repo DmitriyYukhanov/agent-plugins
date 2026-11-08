@@ -1,6 +1,6 @@
 {
   "name": "seo-pulse",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Run Search Console SEO cycles and bounded public-page checks for broken links, empty documentation and explicit technical expectations.",
   "author": {"name": "Dmitry Yuhanov"}
 }
