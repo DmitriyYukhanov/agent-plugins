@@ -4,6 +4,14 @@ Use Search Console evidence to choose one SEO change per site, then measure it.
 SEO Pulse checks the query against the current page and gives a concrete
 recommendation or a reason to wait.
 
+## See SEO Pulse in action
+
+In this 26-second demo, a sample project goes from three failed local source checks to zero.
+
+https://github.com/user-attachments/assets/af8d0f3e-5f91-4598-b82d-9cb0cef5ad9f
+
+[Download the MP4](../../assets/seo-pulse-demo.mp4?raw=true)
+
 ## Start with one read-only run
 
 Install from the marketplace in Claude Code:
