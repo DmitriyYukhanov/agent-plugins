@@ -512,7 +512,7 @@ recover() { # a lock at tick start: a live tick (busy), or a dead one's run to s
 
 run_issue() { # the picked issue: lock, flip, launch, wait, reconcile
   local repo=${CONF_REPO[$PICK_I]} path=${CONF_PATH[$PICK_I]} host=${CONF_HOST[$PICK_I]}
-  local tier=${CONF_TIER[$PICK_I]} n=$PICK_N log rc cause='' clierr=0 active=0 waited=0 id comments stage
+  local tier=${CONF_TIER[$PICK_I]} n=$PICK_N log rc cause='' clierr=0 active=0 next_observation=180 waited=0 id comments stage
   say "ISSUE=$repo#$n"
   say "PICK=$PICK_WHY"
   load_boot || die boot "could not read the machine's boot identity"
@@ -562,6 +562,12 @@ run_issue() { # the picked issue: lock, flip, launch, wait, reconcile
       printf '%s\n' "$cause" >"$LOCK/cause" # for recovery, if the stop does not take
       break
     fi
+    if [ "$active" -ge "$next_observation" ] && [ -f "$AD_HOME/monitoring.json" ]; then
+      # Windows ignores overlapping scheduled ticks while this repair is running.
+      observe_seo_reports >>"$AD_HOME/logs/observations.log" 2>&1 &
+      next_observation=$((active + 180))
+    fi
+
     sleep "$POLL_SECONDS"
     active=$((active + POLL_SECONDS))
   done
@@ -591,10 +597,20 @@ run_issue() { # the picked issue: lock, flip, launch, wait, reconcile
   say "TICK=done"
 }
 
+observe_seo_reports() {
+  local registry="$AD_HOME/monitoring.json" python=python3
+  [ -f "$registry" ] && [ ! -e "$AD_HOME/paused" ] || return 0
+  if on_windows; then python=python; fi
+  "$python" -B "$HERE/seo_observe.py" --registry "$registry" --state "$AD_HOME/observations" ||
+    say "SEO_OBSERVE=error"
+}
+
+
 main() {
   mkdir -p "$AD_HOME/logs"
   load_boot || die boot "could not read the machine's boot identity"
   recover
+  observe_seo_reports
   if [ -e "$AD_HOME/paused" ]; then
     say "TICK=paused"
     exit 0

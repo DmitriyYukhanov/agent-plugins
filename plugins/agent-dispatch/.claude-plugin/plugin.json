@@ -1,6 +1,6 @@
 {
   "name": "agent-dispatch",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Run owner-approved GitHub issues locally through Claude Code or Codex, with optional verified SEO-incident intake.",
   "author": {
     "name": "Dmitry Yuhanov"

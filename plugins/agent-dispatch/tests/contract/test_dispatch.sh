@@ -474,6 +474,7 @@ kill_stray_run() { # safety net for a launching test: a broken stop must not str
   rm -rf "$TEST_TMPDIR"
 }
 
+# shellcheck disable=SC2317,SC2329 # Export the fake observer to the dispatch subprocess.
 test_the_deadline_stops_the_run_and_fails_it() {
   local leader child start
   setup_env
@@ -482,8 +483,16 @@ test_the_deadline_stops_the_run_and_fails_it() {
   open_issue 4 agent
   # The accelerated four-hour clock starts after the real launcher has published its CLI.
   export FAKE_CLI_MODE=hang FAKE_SLEEP_STEP=3600 FAKE_SLEEP_REAL=1 FAKE_SLEEP_READY="$FIX/hang.pids"
+  printf '{}\n' >"$HOME/.agent-dispatch/monitoring.json"
+  python() {
+    if [ -d "$HOME/.agent-dispatch/lock" ]; then printf 'busy\n'; else printf 'idle\n'; fi >>"$FIX/observations"
+  }
+  python3() { python "$@"; }
+  export -f python python3
   start=$SECONDS
   dispatch 3600
+  assert_contains "$(cat "$FIX/observations")" 'idle'
+  assert_contains "$(cat "$FIX/observations")" 'busy'
   # SECONDS is bash's own real-time clock, untouched by the fake date/sleep fixtures: a stop that
   # does nothing would still "pass" once the real 600s sleep ends on its own, just 500x too slow.
   [ "$((SECONDS - start))" -lt 120 ] || fail "the tick took $((SECONDS - start))s; the stop did nothing and it waited out the real 600s sleep"
@@ -1465,4 +1474,22 @@ test_failure_after_launch_preserves_a_fresh_owner_queue_label() {
   : >"$LOCK/launched"
   OUT=$(reconcile octo/widgets 4 stopped "$AD_HOME/logs/run.log" 0)
   assert_eq $'agent\nagent:failed' "$(cat "$FIX/labels-4")" "a fresh owner retry label was discarded"
+}
+
+# shellcheck disable=SC2317,SC2329 # Python functions are exported to the dispatch subprocess.
+test_observation_tick_uses_no_model_when_idle() {
+  setup_env
+  printf '{}\n' >"$HOME/.agent-dispatch/monitoring.json"
+  python() {
+    [ "$1" = -B ] && [ "$2" = "$AD_SCRIPTS/seo_observe.py" ] &&
+      [ "$3" = --registry ] && [ "$4" = "$HOME/.agent-dispatch/monitoring.json" ] &&
+      [ "$5" = --state ] && [ "$6" = "$HOME/.agent-dispatch/observations" ] || return 9
+    printf 'OBSERVED=1\n'
+  }
+  python3() { python "$@"; }
+  export -f python python3
+  dispatch
+  assert_contains "$OUT" 'OBSERVED=1'
+  assert_key "$OUT" TICK idle
+  [ ! -e "$FAKE_CLI_LOG" ] || fail 'observation launched a model'
 }

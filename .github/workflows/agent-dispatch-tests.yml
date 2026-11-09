@@ -44,5 +44,5 @@ jobs:
       - name: Run agent-dispatch contract tests
         run: /bin/bash plugins/agent-dispatch/tests/run-tests.sh
 
-      - name: Run trusted SEO intake tests
-        run: python -B -m unittest discover -s plugins/agent-dispatch/tests -p test_seo_intake.py
+      - name: Run SEO intake and observation tests
+        run: python -B -m unittest discover -s plugins/agent-dispatch/tests -p 'test_seo_*.py'
