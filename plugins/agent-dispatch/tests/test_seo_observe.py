@@ -176,7 +176,7 @@ class ObserverTests(unittest.TestCase):
             json.dumps([weekly["property"], "query", URL]).encode()).decode()
         signal = f"<!-- seo-pulse:signal:{identity} -->"
         plan = [dict(method="PATCH", path=f"/{ROOT}/issues/12",
-                     data=dict(body=signal, state="closed"), before=dict(body=signal, number=12)),
+                     data=dict(body=signal, state="closed")),
                 dict(method="PATCH", path=f"/{ROOT}/issues/11", data=dict(body=body))]
         actual = observer.report_summary(plan, weekly, self.run_info, api, ROOT)
         self.assertEqual(actual["readback"], "matched_plan")

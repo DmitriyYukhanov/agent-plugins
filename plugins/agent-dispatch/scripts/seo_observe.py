@@ -235,10 +235,9 @@ def report_summary(report, feed, run, api, root):
         prop, query, url = load_json(base64.b64decode(marker[1], altchars=b"-_", validate=True))
         require(prop == feed["property"] and isinstance(query, str)
                 and owned_link(url, {"link_prefixes": [feed["scope"]]}), "weekly signal leaves scope")
-        require((post and data.get("labels") == ["seo-signal"])
-                or (patch and data.get("state") in ("open", "closed")
-                    and row["before"]["number"] == int(path.rsplit("/", 1)[-1])
-                    and marker[0] in row["before"]["body"]), "invalid weekly signal write")
+        require((post and set(data) == {"title", "labels", "body"} and data["labels"] == ["seo-signal"])
+                or (patch and set(data) == {"body", "state"} and data["state"] in ("open", "closed")),
+                "invalid weekly signal write")
     require(len(patches) <= 1, "duplicate weekly report write")
     current = api(f"{root}/issues/{issue}")
     block = report_block(current["body"], feed)
