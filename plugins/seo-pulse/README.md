@@ -6,9 +6,11 @@ recommendation or a reason to wait.
 
 ## See SEO Pulse in action
 
-[![SEO Pulse demo cover](../../assets/seo-pulse-demo.jpg)](../../assets/seo-pulse-demo.mp4)
+In this 26-second demo, a sample project goes from three failed local source checks to zero.
 
-[Watch the 26-second demo](../../assets/seo-pulse-demo.mp4) to see a sample project go from three failed source checks to zero.
+https://github.com/user-attachments/assets/af8d0f3e-5f91-4598-b82d-9cb0cef5ad9f
+
+[Download the MP4](../../assets/seo-pulse-demo.mp4?raw=true)
 
 ## Start with one read-only run
 
