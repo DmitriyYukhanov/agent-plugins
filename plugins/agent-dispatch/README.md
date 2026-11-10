@@ -30,7 +30,10 @@ a command to test it.
 An optional [trusted SEO intake](references/seo-incidents.md) can apply `agent` through your local
 GitHub login. It checks a pinned Actions workflow, its successful run and evidence artifact, and
 the current public failure before admitting an issue. Without a local policy, the tick only uses
-the owner queue above. Python 3.11 or newer is needed only for this intake.
+the owner queue above. Python 3.11 or newer is needed for the intake and observer.
+
+The optional [report observer](references/seo-observations.md) checks enrolled Actions artifacts
+and records observations locally without launching a model.
 
 ## Install
 
