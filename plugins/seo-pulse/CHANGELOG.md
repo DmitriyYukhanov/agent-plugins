@@ -5,6 +5,11 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - 2026-11-11
+
+### Added
+- Measure brand mentions and citations in saved AI answers and report coverage gaps.
+
 ## [1.9.1] - 2026-11-09
 
 ### Added

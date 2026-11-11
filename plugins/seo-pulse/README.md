@@ -81,6 +81,19 @@ Implement one justified change through the page owner's reviewed flow. Record
 its date, page, fixed baseline and check dates in the SEO log and config. Hold
 the page while measuring, including new inbound links. Keep other ideas parked.
 
+## Measure visibility in saved AI answers
+
+Open the product repository and ask:
+
+> Use seo-visibility to review my local answer export. Count brand mentions
+> and answers citing our site or third-party URLs. Show the denominators
+> and the prompts we missed.
+
+Use the [observation example](skills/seo-visibility/references/observations.md)
+for manual captures or to map a provider export. Keep the captures local.
+The [skill](skills/seo-visibility/SKILL.md) reports what the saved answers
+show. Provider access, traffic and conversions need separate evidence.
+
 ## Add weekly reporting when ready
 
 Weekly mode puts due measurements and decline flags in a pinned GitHub report.
