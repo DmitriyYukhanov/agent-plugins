@@ -55,6 +55,8 @@ show what caused it.
 Watch a local project go from three failed checks to zero, then see how clicks,
 impressions, and click-through rate fit together in a 28-day example.
 
+https://github.com/user-attachments/assets/60237a2d-faac-4d27-a849-80f672007c7b
+
 [Download the MP4](../../assets/seo-pulse-demo.mp4?raw=true)
 
 ## Set up recurring checks
