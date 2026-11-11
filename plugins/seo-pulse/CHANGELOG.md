@@ -5,6 +5,12 @@ All notable changes to the **seo-pulse** plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.2] - 2026-11-12
+
+### Changed
+- Shorten the quick start and list what each feature delivers.
+- Update the demo with a project walkthrough and a 28-day search example.
+
 ## [1.9.1] - 2026-11-09
 
 ### Added
