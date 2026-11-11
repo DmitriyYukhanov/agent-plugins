@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 - Measure brand mentions and citations in saved AI answers and report coverage gaps.
 
+### Changed
+- Shorten the quick start and list what each feature delivers.
+
 ## [1.9.1] - 2026-11-09
 
 ### Added

@@ -6,13 +6,13 @@ alongside the captures. This example is synthetic.
 ```json
 [
   {
-    "run_id": "2026-11-10-maple-web",
-    "product": "Maple Cache",
-    "prompt_set": "maple-buyer-questions@1",
+    "run_id": "run-a",
+    "product": "product-a",
+    "prompt_set": "buyer-questions@1",
     "prompt_id": "Q1",
-    "prompt": "Which Unity editor tools cache work locally on Windows?",
+    "prompt": "Which tools export reports as CSV?",
     "task": "discovery",
-    "engine": "Example Search",
+    "engine": "engine-a",
     "surface": "consumer app",
     "model": null,
     "search_setting": "Web Search",
@@ -22,13 +22,12 @@ alongside the captures. This example is synthetic.
     "repeat_number": 1,
     "timestamp": "2026-11-10T12:05:00+00:00",
     "status": "observed",
-    "raw_ref": "raw/maple-web/Q1-1.txt",
+    "raw_ref": "raw/run-a/Q1-1.txt",
     "mention": true,
     "citations_complete": false,
     "citations": [
-      {"url": "https://reviews.example/unity-cache", "ownership": "third_party"}
-    ],
-    "competitors": ["Pine Cache"]
+      {"url": "https://sources.example/report-exports", "ownership": "third_party"}
+    ]
   }
 ]
 ```
@@ -49,26 +48,28 @@ alongside the captures. This example is synthetic.
   and leave that slot out of metric totals until the evidence resolves it.
   Validate that a run uses consistent conditions and that a versioned prompt
   ID has the same exact text. Flag mismatches before comparing.
+- Record the search setting shown for the actual answer. A preview or
+  fallback mode gets its own run ID even if the selected mode stayed the same.
 - Use `observed` for an answer, `failed` for an attempted collection with
-  no answer and `not_run` for a planned prompt that was not attempted.
+  no answer and `not_run` for an unattempted prompt. An answer captured in
+  full still counts if the interface shows an access warning.
   If an older export only says a slot is missing, leave it as a coverage
   gap unless the source establishes whether it was attempted. Keep
-  unavailable annotations, raw references and timestamps as `null`. Use the timestamp and timezone
-  from collection evidence. Use a local capture path or a stable local
-  capture ID for `raw_ref`. Identify missing captures and distinguish
-  inherited export metadata from citations verified against accessible raw
-  evidence. Carry over competitor names and context only where recorded.
+  unavailable annotations, raw references and timestamps as `null`. Use the
+  timestamp and timezone from collection evidence. For `raw_ref`, use a local
+  path or stable capture ID. Mark missing captures. If the source records
+  competitors, retain those observations in the optional `competitors` field.
 - An explicit `mention: false` means the answer was scored and the target
-  was absent. Use `mention: null` for an unscored answer. Keep failed and
-  unrun rows out of the annotation denominators.
+  was absent. Use `mention: null` for an unscored answer. An excerpt that
+  omits the target supports a negative only if a full-answer scan confirms
+  absence. Keep failed and unrun rows out of the denominators.
 - Preserve the observed destination URLs exactly. Classify each URL against
   the verified project scope as `owned`, `third_party`, or `null` if
   ownership is unresolved. Use `citations: null` when the URL record is
   unavailable. Use `citations: []` with `citations_complete: true` only
   for a confirmed answer with no citations. Use a nonempty list with
   `citations_complete: false` when only some destinations were captured.
-  Keep ownership and competitor observations tied to the answer. A citation
-  gives no evidence about why the engine picked the source.
+  Retain the citation as answer evidence and leave source-selection reasons unknown.
 
 ## Count and compare
 
