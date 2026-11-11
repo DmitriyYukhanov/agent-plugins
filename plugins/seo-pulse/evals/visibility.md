@@ -56,6 +56,11 @@ Expect separate labelled series and no trend calculated across incompatible
 or unverified conditions. For a pair of compatible runs with missing answers,
 compare only their common measured prompt/repeat pairs for each metric.
 
+Import two compatible runs whose exports call the first attempt at Q1
+`attempt-A` and `attempt-B`. The collection plans identify both as repeat 1.
+Expect one matched pair, with both original attempt IDs in its provenance.
+With no evidence of the repeat slots, leave the pair unverified.
+
 ## Plan with no answers
 
 Ask, "Which AI searches should we track for our Windows-only Unity cache?"

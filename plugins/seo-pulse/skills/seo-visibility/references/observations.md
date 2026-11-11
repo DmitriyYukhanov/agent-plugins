@@ -19,6 +19,7 @@ alongside the captures. This example is synthetic.
     "language": "en",
     "market": "GB",
     "repeat_id": "1",
+    "repeat_number": 1,
     "timestamp": "2026-11-10T12:05:00+00:00",
     "status": "observed",
     "raw_ref": "raw/maple-web/Q1-1.txt",
@@ -34,12 +35,15 @@ alongside the captures. This example is synthetic.
 
 ## Import
 
-- Use a stable `run_id` for each original collection batch under one set of
-  conditions. Reuse it when importing the batch again. An observation's
+- Use a stable `run_id` for each collection batch, prompt-set version and
+  set of conditions. If an export mixes versions or conditions, give each
+  series its own stable run ID. Reuse it on import. An observation's
   identity is `(run_id, prompt_id, repeat_id)`. Keep the original repeat ID
   for each attempt. A new, intentional repeat needs a new slot and capture.
   Never mint identities from import filenames or import time. If an export
   cannot identify a batch or attempt reliably, flag that gap before counting.
+  Record the planned repeat number in `repeat_number` when the collection
+  protocol establishes it. Use `null` if it is unknown.
 - Import identical records for a slot once. If the evidence for a slot
   disagrees, retain both versions locally, report the conflicting identity
   and leave that slot out of metric totals until the evidence resolves it.
@@ -84,8 +88,10 @@ alongside the captures. This example is synthetic.
   when publishing an authorized summary.
 - Show series by run, product, prompt-set version, engine, app/API surface,
   model, search setting and language/market. Keep other documented changes
-  to collection conditions visible. Compare repeated runs on the same
-  prompt/repeat slots with measured values on both sides for each metric.
+  to collection conditions visible. Pair runs on the same prompt ID and
+  planned repeat number. Keep each original repeat ID in the provenance.
+  Use slots with one observation and a measured value on each side for
+  that metric. Report missing or ambiguous pairs as gaps.
   Label same-prompt comparisons across engines as descriptive and show each
   side's conditions. Keep incompatible runs separate. If a model or setting
   is unknown, say so and leave equivalence unverified.
