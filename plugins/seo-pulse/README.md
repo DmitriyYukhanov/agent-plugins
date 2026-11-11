@@ -23,7 +23,7 @@ with your baseline.
    codex plugin add seo-pulse@dmitriy-claude-plugins
    ```
 
-2. **Run.** Open the site's repository. Connect a Search Console property you can read, then ask:
+2. **Run.** Open the site's repository and connect a Search Console property you can read. If Codex has no Search Console read tools, follow the [OAuth and MCP setup](skills/seo-pulse/references/setup.md#local-oauth-and-mcp) first. Then ask:
 
    > Use SEO Pulse for a read-only review of this project. Verify which pages we own and check any active measurements. Recommend one change per site or explain why we should wait.
 
